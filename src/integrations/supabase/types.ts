@@ -208,6 +208,7 @@ export type Database = {
           agent_whatsapp: string | null
           amenities: string[]
           area_unit: Database["public"]["Enums"]["area_unit"]
+          assigned_to: string | null
           balconies: number | null
           bathrooms: number | null
           bedrooms: number | null
@@ -275,6 +276,7 @@ export type Database = {
           agent_whatsapp?: string | null
           amenities?: string[]
           area_unit?: Database["public"]["Enums"]["area_unit"]
+          assigned_to?: string | null
           balconies?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -342,6 +344,7 @@ export type Database = {
           agent_whatsapp?: string | null
           amenities?: string[]
           area_unit?: Database["public"]["Enums"]["area_unit"]
+          assigned_to?: string | null
           balconies?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
@@ -399,7 +402,15 @@ export type Database = {
           virtual_tour_url?: string | null
           youtube_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_documents: {
         Row: {
@@ -589,6 +600,83 @@ export type Database = {
         }
         Relationships: []
       }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          details: string | null
+          due_at: string | null
+          id: string
+          lead_id: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          property_id: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_at?: string | null
+          id?: string
+          lead_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          due_at?: string | null
+          id?: string
+          lead_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -672,6 +760,8 @@ export type Database = {
         | "office_space"
         | "warehouse"
         | "farm_house"
+      task_priority: "low" | "medium" | "high"
+      task_status: "open" | "in_progress" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -852,6 +942,8 @@ export const Constants = {
         "warehouse",
         "farm_house",
       ],
+      task_priority: ["low", "medium", "high"],
+      task_status: ["open", "in_progress", "done"],
     },
   },
 } as const
