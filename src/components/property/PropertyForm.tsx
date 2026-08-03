@@ -40,6 +40,7 @@ import {
 } from "@/lib/constants";
 import { generatePropertyCode, slugify } from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
+import { useTeamQuery } from "@/lib/roles";
 
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
@@ -88,6 +89,7 @@ const schema = z.object({
   is_premium: z.boolean(),
   is_hot: z.boolean(),
   is_exclusive: z.boolean(),
+  assigned_to: z.string().optional().nullable(),
   agent_name: z.string().optional().nullable(),
   agent_phone: z.string().optional().nullable(),
   agent_whatsapp: z.string().optional().nullable(),
@@ -164,6 +166,7 @@ function defaults(property?: Property | null): PropertyFormValues {
     is_premium: property?.is_premium ?? false,
     is_hot: property?.is_hot ?? false,
     is_exclusive: property?.is_exclusive ?? false,
+    assigned_to: property?.assigned_to ?? "",
     agent_name: property?.agent_name ?? "Deepak Yadav",
     agent_phone: property?.agent_phone ?? "+91 98110 45678",
     agent_whatsapp: property?.agent_whatsapp ?? "+91 98110 45678",
@@ -203,6 +206,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const navigate = useNavigate();
   const create = useCreateProperty();
   const update = useUpdateProperty();
+  const { data: team } = useTeamQuery();
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
@@ -256,6 +260,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       slug: data.slug || slugify(data.title),
       meta_title: data.meta_title || data.title,
       sector: data.sector || null,
+      assigned_to: data.assigned_to || null,
       facing: (data.facing || null) as never,
       age: (data.age || null) as never,
       furnishing: (data.furnishing || null) as never,
@@ -726,6 +731,29 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           </Field>
           <Field label="Office address">
             <Input {...register("agent_office")} />
+          </Field>
+          <Field
+            label="Assigned teammate"
+            hint="The team member responsible for this listing."
+          >
+            <Select
+              value={values.assigned_to || "unassigned"}
+              onValueChange={(v) =>
+                setValue("assigned_to", v === "unassigned" ? "" : v, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {(team ?? []).map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.full_name ?? member.email ?? "Teammate"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
         </TabsContent>
       </Tabs>
