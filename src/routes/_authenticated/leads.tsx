@@ -236,7 +236,8 @@ function LeadsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Leads"
-        description="Enquiries captured from your public listing pages."
+        description="Enquiries from your public listings plus anything you log manually."
+        actions={<AddLeadDialog team={members} />}
       />
 
       <div className="flex flex-wrap gap-2">
