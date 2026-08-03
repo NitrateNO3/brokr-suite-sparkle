@@ -123,6 +123,18 @@ function DashboardPage() {
 
   const recent = (properties ?? []).slice(0, 5);
 
+  const dueFollowUps = useMemo(
+    () =>
+      (leads ?? [])
+        .filter((l) => ["overdue", "today"].includes(followUpState(l.follow_up_at)))
+        .sort(
+          (a, b) =>
+            new Date(a.follow_up_at ?? 0).getTime() - new Date(b.follow_up_at ?? 0).getTime(),
+        )
+        .slice(0, 6),
+    [leads],
+  );
+
   const quickActions = [
     { label: "Add Property", to: "/properties/new", icon: Plus },
     { label: "Manage Listings", to: "/properties", icon: ListChecks },
