@@ -166,6 +166,7 @@ function defaults(property?: Property | null): PropertyFormValues {
     is_premium: property?.is_premium ?? false,
     is_hot: property?.is_hot ?? false,
     is_exclusive: property?.is_exclusive ?? false,
+    assigned_to: property?.assigned_to ?? "",
     agent_name: property?.agent_name ?? "Deepak Yadav",
     agent_phone: property?.agent_phone ?? "+91 98110 45678",
     agent_whatsapp: property?.agent_whatsapp ?? "+91 98110 45678",
