@@ -55,7 +55,7 @@ function MediaPage() {
             <figure key={image.id} className="surface group overflow-hidden">
               <img
                 src={image.url}
-                alt={image.alt_text ?? image.properties?.title ?? "Property photo"}
+                alt={image.alt ?? image.properties?.title ?? "Property photo"}
                 loading="lazy"
                 className="aspect-4/3 w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
