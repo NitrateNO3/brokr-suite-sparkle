@@ -222,6 +222,13 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     if (!values.meta_title) setValue("meta_title", values.title);
   }, [values.title, values.meta_title, setValue]);
 
+  // Keep the slug in sync with the title until it is edited manually.
+  useEffect(() => {
+    if (property || formState.dirtyFields.slug) return;
+    setValue("slug", slugify(values.title || ""));
+  }, [values.title, property, formState.dirtyFields.slug, setValue]);
+
+
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
       ...data,
