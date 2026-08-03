@@ -22,6 +22,9 @@ import {
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { RichTextEditor } from "@/components/property/RichTextEditor";
 import { MediaManager } from "@/components/property/MediaManager";
+import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
+import { supabase } from "@/integrations/supabase/client";
+import { uploadToStorage } from "@/lib/storage";
 import {
   AMENITY_LIST,
   AREA_UNITS,
@@ -37,6 +40,7 @@ import {
 } from "@/lib/constants";
 import { generatePropertyCode, slugify } from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
+
 
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
@@ -177,6 +181,10 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const create = useCreateProperty();
   const update = useUpdateProperty();
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(schema),
@@ -214,10 +222,18 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     if (!values.meta_title) setValue("meta_title", values.title);
   }, [values.title, values.meta_title, setValue]);
 
+  // Keep the slug in sync with the title until it is edited manually.
+  useEffect(() => {
+    if (property || formState.dirtyFields.slug) return;
+    setValue("slug", slugify(values.title || ""));
+  }, [values.title, property, formState.dirtyFields.slug, setValue]);
+
+
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
       ...data,
       slug: data.slug || slugify(data.title),
+      meta_title: data.meta_title || data.title,
       sector: data.sector || null,
       facing: (data.facing || null) as never,
       age: (data.age || null) as never,
@@ -233,6 +249,36 @@ export function PropertyForm({ property }: { property?: Property | null }) {
         toast.success("Listing updated");
       } else {
         const created = await create.mutateAsync(payload as never);
+
+        // Upload any images staged before the listing existed.
+        if (pendingFiles.length) {
+          setUploading(true);
+          let cover: string | null = null;
+          try {
+            for (let i = 0; i < pendingFiles.length; i += 1) {
+              const url = await uploadToStorage(pendingFiles[i]!, created.id);
+              await supabase.from("property_images").insert({
+                property_id: created.id,
+                url,
+                sort_order: i,
+                is_featured: i === coverIndex,
+              });
+              if (i === coverIndex) cover = url;
+            }
+            if (cover) {
+              await supabase.from("properties").update({ cover_image: cover }).eq("id", created.id);
+            }
+            toast.success(`${pendingFiles.length} file(s) uploaded`);
+          } catch (uploadError) {
+            toast.error(
+              uploadError instanceof Error ? uploadError.message : "Some media failed to upload",
+            );
+          } finally {
+            setUploading(false);
+            setPendingFiles([]);
+          }
+        }
+
         localStorage.removeItem(DRAFT_KEY);
         toast.success("Listing created");
         navigate({ to: "/properties/$id/edit", params: { id: created.id } });
@@ -242,8 +288,9 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     }
   });
 
-  const pending = create.isPending || update.isPending;
+  const pending = create.isPending || update.isPending || uploading;
   const sectorOptions = values.city === "Gurgaon" ? GURGAON_SECTORS : [];
+
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -564,10 +611,14 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               onCoverChange={(url: string) => setValue("cover_image", url, { shouldDirty: true })}
             />
           ) : (
-            <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Create the listing first — image, video and document uploads unlock right after.
-            </p>
+            <PendingMediaPicker
+              files={pendingFiles}
+              onChange={setPendingFiles}
+              coverIndex={coverIndex}
+              onCoverIndexChange={setCoverIndex}
+            />
           )}
+
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="YouTube link">
               <Input {...register("youtube_url")} placeholder="https://youtube.com/watch?v=…" />
