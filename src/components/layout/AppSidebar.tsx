@@ -103,7 +103,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={signOut} tooltip="Logout">
+            <SidebarMenuButton onClick={signOut} tooltip="Logout" aria-label="Logout">
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Logout</span>}
             </SidebarMenuButton>

@@ -102,9 +102,10 @@ function AuthPage() {
           transition={{ duration: 0.6 }}
           className="max-w-md"
         >
-          <h1 className="display-title text-4xl leading-tight text-primary-foreground">
+          <p className="display-title text-4xl leading-tight text-primary-foreground">
             The quiet operating system for modern brokerages.
-          </h1>
+          </p>
+
           <p className="mt-4 text-sm/relaxed text-primary-foreground/80">
             Manage inventory, capture leads and publish beautiful shareable property pages — without
             touching a line of code.
@@ -131,9 +132,10 @@ function AuthPage() {
             <p className="display-title text-xl">BrokrSuite</p>
           </div>
 
-          <h2 className="display-title text-2xl">
-            {mode === "signin" ? "Sign in to your portal" : "Create your account"}
-          </h2>
+          <h1 className="display-title text-2xl">
+            {mode === "signin" ? "Sign in to your agency portal" : "Create your account"}
+          </h1>
+
           <p className="mt-1 text-sm text-muted-foreground">Deep Real Estate agency workspace.</p>
 
           <form
