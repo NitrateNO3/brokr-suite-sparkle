@@ -73,6 +73,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          assigned_to: string | null
           created_at: string
           email: string | null
           id: string
@@ -87,6 +88,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -101,6 +103,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           email?: string | null
           id?: string
@@ -115,6 +118,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_property_id_fkey"
             columns: ["property_id"]
