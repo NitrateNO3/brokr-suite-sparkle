@@ -36,9 +36,9 @@ export const Route = createFileRoute("/sitemap.xml")({
         const entries: SitemapEntry[] = [{ path: "/", changefreq: "weekly", priority: "1.0" }];
 
         try {
-          const supabase = publicClient();
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data } = await (
-            supabase.rpc as unknown as (
+            supabaseAdmin.rpc as unknown as (
               fn: string,
             ) => Promise<{ data: { slug: string }[] | null }>
           )("list_published_property_slugs");
