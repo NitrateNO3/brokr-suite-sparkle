@@ -1,13 +1,36 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShieldCheck, Users } from "lucide-react";
+import { Plus, ShieldCheck, Users } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ROLES, roleLabel, useMyRoles, useTeamQuery, useToggleRole } from "@/lib/roles";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ROLES, roleLabel, useMyRoles, useTeamQuery, useToggleRole, type AppRole } from "@/lib/roles";
+import { addTeamMember } from "@/lib/team.functions";
 import { formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/team")({
@@ -26,6 +49,132 @@ export const Route = createFileRoute("/_authenticated/team")({
   component: TeamPage,
 });
 
+function AddTeamMemberDialog() {
+  const qc = useQueryClient();
+  const addMember = useServerFn(addTeamMember);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    phone: "",
+    jobTitle: "",
+    role: "agent" as AppRole,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      addMember({
+        data: {
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+          phone: form.phone || undefined,
+          jobTitle: form.jobTitle || undefined,
+          role: form.role,
+        },
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team"] });
+      toast.success("Teammate added — share the sign-in details with them");
+      setForm({ fullName: "", email: "", password: "", phone: "", jobTitle: "", role: "agent" });
+      setOpen(false);
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not add teammate"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4" /> Add teammate
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="display-title">Add a teammate</DialogTitle>
+          <DialogDescription>
+            Creates their portal account with a temporary password you share with them.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="grid gap-3 sm:grid-cols-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label>Full name</Label>
+            <Input
+              required
+              value={form.fullName}
+              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Email</Label>
+            <Input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Temporary password</Label>
+            <Input
+              required
+              minLength={8}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Phone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Job title</Label>
+            <Input
+              value={form.jobTitle}
+              placeholder="Sales advisor"
+              onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Role</Label>
+            <Select
+              value={form.role}
+              onValueChange={(v) => setForm({ ...form, role: v as AppRole })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((role) => (
+                  <SelectItem key={role.value} value={role.value}>
+                    {role.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="sm:col-span-2">
+            <Button type="submit" disabled={mutation.isPending}>
+              Create account
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function TeamPage() {
   const { data, isLoading } = useTeamQuery();
   const { isAdmin } = useMyRoles();
@@ -37,10 +186,12 @@ function TeamPage() {
         title="Team & roles"
         description={
           isAdmin
-            ? "Grant or revoke access levels for everyone in the workspace."
-            : "Only admins can change access levels."
+            ? "Add teammates and grant or revoke access levels for the workspace."
+            : "Only admins can add teammates or change access levels."
         }
+        actions={isAdmin ? <AddTeamMemberDialog /> : undefined}
       />
+
 
       <div className="surface flex flex-wrap gap-4 p-4 text-xs text-muted-foreground">
         {ROLES.map((role) => (
