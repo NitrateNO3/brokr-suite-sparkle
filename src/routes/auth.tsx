@@ -13,6 +13,12 @@ const DEMO_EMAIL = "manavyadav34@gmail.com";
 const DEMO_PASSWORD = "Brokrsuit.deeprealesate";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const raw = s['next'];
+    const safe =
+      typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//") ? raw : null;
+    return safe ? { next: safe } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — BrokrSuite Agency Portal" },
@@ -33,6 +39,9 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  /** Where to land after auth — preserves an OAuth consent hand-off when present. */
+  const destination = next ?? "/dashboard";
   const [email, setEmail] = useState(DEMO_EMAIL);
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -40,9 +49,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) navigate({ to: destination, replace: true });
     });
-  }, [navigate]);
+  }, [navigate, destination]);
 
   /** Signs in, and provisions the account on first use so the demo login always works. */
   const authenticate = async (mail: string, pass: string) => {
@@ -52,7 +61,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email: mail,
           password: pass,
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+          options: { emailRedirectTo: `${window.location.origin}${destination}` },
         });
         if (error && !error.message.toLowerCase().includes("already")) throw error;
       }
@@ -61,14 +70,14 @@ function AuthPage() {
         const { error: signUpError } = await supabase.auth.signUp({
           email: mail,
           password: pass,
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+          options: { emailRedirectTo: `${window.location.origin}${destination}` },
         });
         if (signUpError) throw signUpError;
         ({ error } = await supabase.auth.signInWithPassword({ email: mail, password: pass }));
       }
       if (error) throw error;
       toast.success("Welcome back to BrokrSuite");
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: destination, replace: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not sign you in");
     } finally {

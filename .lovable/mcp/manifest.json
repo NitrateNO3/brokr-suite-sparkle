@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://pwbineucevtxeakbplye.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "brokrsuite-pro",
+      "version": "0.1.0",
+      "title": "BrokrSuite Pro"
+    },
+    "tools": [
+      {
+        "name": "search_properties",
+        "title": "Search properties",
+        "description": "Search the agency property inventory by keyword, city, status, purpose or price range.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Free-text match on title, address or property code."
+            },
+            "city": {
+              "type": "string",
+              "description": "City filter, e.g. Gurgaon."
+            },
+            "status": {
+              "type": "string",
+              "description": "Listing status, e.g. published, draft, sold."
+            },
+            "purpose": {
+              "type": "string",
+              "description": "sale or rent."
+            },
+            "min_price": {
+              "type": "number"
+            },
+            "max_price": {
+              "type": "number"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_property",
+        "title": "Get property details",
+        "description": "Fetch one property with its images, by property id, slug or property code.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Property UUID."
+            },
+            "slug": {
+              "type": "string",
+              "description": "Public listing slug."
+            },
+            "property_code": {
+              "type": "string",
+              "description": "Internal property code."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_leads",
+        "title": "List leads",
+        "description": "List buyer enquiries, optionally filtered by status or narrowed to follow-ups that are due.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Lead status, e.g. new, contacted, qualified."
+            },
+            "due_follow_ups": {
+              "type": "boolean",
+              "description": "Only leads whose next follow-up is due now or overdue."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_lead",
+        "title": "Create lead",
+        "description": "Log a new buyer enquiry (walk-in, phone or referral) in the CRM.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Lead's full name."
+            },
+            "phone": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "message": {
+              "type": "string",
+              "description": "What the lead is looking for."
+            },
+            "source": {
+              "type": "string",
+              "description": "e.g. phone, walk-in, referral."
+            },
+            "property_id": {
+              "type": "string",
+              "description": "Property UUID the enquiry relates to."
+            },
+            "follow_up_at": {
+              "type": "string",
+              "description": "ISO timestamp for the next follow-up."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_lead",
+        "title": "Update lead",
+        "description": "Update a lead's status, internal notes, assignee or next follow-up date/time.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Lead UUID."
+            },
+            "status": {
+              "type": "string",
+              "description": "new, contacted, qualified, negotiating, won, lost."
+            },
+            "notes": {
+              "type": "string"
+            },
+            "assigned_to": {
+              "type": "string",
+              "description": "Teammate profile UUID."
+            },
+            "follow_up_at": {
+              "type": "string",
+              "description": "ISO timestamp for the next follow-up."
+            },
+            "mark_contacted": {
+              "type": "boolean",
+              "description": "Stamp last contacted now and clear the pending follow-up."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "portfolio_summary",
+        "title": "Portfolio summary",
+        "description": "Summarise inventory and pipeline: listing counts by status, portfolio value, lead counts by status and follow-ups due.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "days": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "default": 30,
+              "description": "Window in days for new leads."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
