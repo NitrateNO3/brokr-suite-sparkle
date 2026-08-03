@@ -170,6 +170,13 @@ function defaults(property?: Property | null): PropertyFormValues {
     agent_whatsapp: property?.agent_whatsapp ?? "+91 98110 45678",
     agent_email: property?.agent_email ?? "hello@deeprealestate.in",
     agent_office: property?.agent_office ?? "Sector 48, Sohna Road, Gurgaon",
+    share_show_price: property?.share_show_price ?? true,
+    share_show_address: property?.share_show_address ?? true,
+    share_show_location: property?.share_show_location ?? true,
+    share_show_contact: property?.share_show_contact ?? true,
+    share_show_description: property?.share_show_description ?? true,
+    share_show_amenities: property?.share_show_amenities ?? true,
+    share_show_specs: property?.share_show_specs ?? true,
   };
 }
 
