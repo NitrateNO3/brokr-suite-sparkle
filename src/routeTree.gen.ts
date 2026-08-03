@@ -21,9 +21,11 @@ import { Route as AuthenticatedLocationsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMediaRouteImport } from './routes/_authenticated/media'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as PropertySlugRouteImport } from './routes/property/$slug'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties/new'
+import { Route as AuthenticatedPropertiesIdBrochureRouteImport } from './routes/_authenticated/properties/$id/brochure'
 import { Route as AuthenticatedPropertiesIdEditRouteImport } from './routes/_authenticated/properties/$id/edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -85,6 +87,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const PropertySlugRoute = PropertySlugRouteImport.update({
   id: '/property/$slug',
   path: '/property/$slug',
@@ -100,6 +107,12 @@ const AuthenticatedPropertiesNewRoute =
   AuthenticatedPropertiesNewRouteImport.update({
     id: '/properties/new',
     path: '/properties/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPropertiesIdBrochureRoute =
+  AuthenticatedPropertiesIdBrochureRouteImport.update({
+    id: '/properties/$id/brochure',
+    path: '/properties/$id/brochure',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPropertiesIdEditRoute =
@@ -121,9 +134,11 @@ export interface FileRoutesByFullPath {
   '/media': typeof AuthenticatedMediaRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/properties/$id/brochure': typeof AuthenticatedPropertiesIdBrochureRoute
   '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -138,9 +153,11 @@ export interface FileRoutesByTo {
   '/media': typeof AuthenticatedMediaRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
+  '/properties/$id/brochure': typeof AuthenticatedPropertiesIdBrochureRoute
   '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
 }
 export interface FileRoutesById {
@@ -157,9 +174,11 @@ export interface FileRoutesById {
   '/_authenticated/media': typeof AuthenticatedMediaRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/_authenticated/properties/$id/brochure': typeof AuthenticatedPropertiesIdBrochureRoute
   '/_authenticated/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
 }
 export interface FileRouteTypes {
@@ -176,9 +195,11 @@ export interface FileRouteTypes {
     | '/media'
     | '/profile'
     | '/settings'
+    | '/team'
     | '/property/$slug'
     | '/properties/new'
     | '/properties/'
+    | '/properties/$id/brochure'
     | '/properties/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -193,9 +214,11 @@ export interface FileRouteTypes {
     | '/media'
     | '/profile'
     | '/settings'
+    | '/team'
     | '/property/$slug'
     | '/properties/new'
     | '/properties'
+    | '/properties/$id/brochure'
     | '/properties/$id/edit'
   id:
     | '__root__'
@@ -211,9 +234,11 @@ export interface FileRouteTypes {
     | '/_authenticated/media'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
+    | '/_authenticated/team'
     | '/property/$slug'
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/'
+    | '/_authenticated/properties/$id/brochure'
     | '/_authenticated/properties/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -310,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/property/$slug': {
       id: '/property/$slug'
       path: '/property/$slug'
@@ -329,6 +361,13 @@ declare module '@tanstack/react-router' {
       path: '/properties/new'
       fullPath: '/properties/new'
       preLoaderRoute: typeof AuthenticatedPropertiesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/properties/$id/brochure': {
+      id: '/_authenticated/properties/$id/brochure'
+      path: '/properties/$id/brochure'
+      fullPath: '/properties/$id/brochure'
+      preLoaderRoute: typeof AuthenticatedPropertiesIdBrochureRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/properties/$id/edit': {
@@ -351,8 +390,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMediaRoute: typeof AuthenticatedMediaRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedPropertiesIndexRoute: typeof AuthenticatedPropertiesIndexRoute
+  AuthenticatedPropertiesIdBrochureRoute: typeof AuthenticatedPropertiesIdBrochureRoute
   AuthenticatedPropertiesIdEditRoute: typeof AuthenticatedPropertiesIdEditRoute
 }
 
@@ -366,8 +407,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMediaRoute: AuthenticatedMediaRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedPropertiesIndexRoute: AuthenticatedPropertiesIndexRoute,
+  AuthenticatedPropertiesIdBrochureRoute:
+    AuthenticatedPropertiesIdBrochureRoute,
   AuthenticatedPropertiesIdEditRoute: AuthenticatedPropertiesIdEditRoute,
 }
 

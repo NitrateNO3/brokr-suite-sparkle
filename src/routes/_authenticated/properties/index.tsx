@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Building2,
+  FileText,
+
   Copy,
   ExternalLink,
   Pencil,
@@ -237,6 +239,12 @@ function PropertiesPage() {
                     <ExternalLink className="h-4 w-4" />
                   </Link>
                 </Button>
+                <Button variant="ghost" size="icon" asChild aria-label="Brochure">
+                  <Link to="/properties/$id/brochure" params={{ id: property.id }}>
+                    <FileText className="h-4 w-4" />
+                  </Link>
+                </Button>
+
                 <Button
                   variant="ghost"
                   size="icon"

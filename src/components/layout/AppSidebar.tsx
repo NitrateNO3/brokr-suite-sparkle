@@ -10,6 +10,8 @@ import {
   MapPin,
   Sparkles,
   Settings as SettingsIcon,
+  ShieldCheck,
+
   CircleUser,
   LogOut,
 } from "lucide-react";
@@ -44,9 +46,11 @@ const catalogue = [
 ];
 
 const account = [
+  { title: "Team & Roles", url: "/team", icon: ShieldCheck },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
   { title: "Profile", url: "/profile", icon: CircleUser },
 ];
+
 
 export function AppSidebar() {
   const { state } = useSidebar();
