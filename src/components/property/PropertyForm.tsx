@@ -687,6 +687,35 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           </div>
         </TabsContent>
 
+        <TabsContent value="sharing" className="surface mt-4 space-y-4 p-5">
+          <div>
+            <p className="display-title text-lg">What clients see on the shared link</p>
+            <p className="text-sm text-muted-foreground">
+              Turn anything off to hide it from the public property page you share. Your internal
+              records always keep the full details.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SHARE_FIELDS.map((field) => (
+              <label
+                key={field.key}
+                className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
+              >
+                <span>
+                  <span className="text-sm font-medium">{field.label}</span>
+                  <span className="block text-xs text-muted-foreground">{field.hint}</span>
+                </span>
+                <Switch
+                  checked={Boolean(values[field.key])}
+                  onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
+                />
+              </label>
+            ))}
+          </div>
+        </TabsContent>
+
+
+
         <TabsContent value="agent" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
           <Field label="Agent name">
             <Input {...register("agent_name")} />
