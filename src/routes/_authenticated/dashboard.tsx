@@ -354,7 +354,55 @@ function DashboardPage() {
             ))}
           </div>
         </div>
+
+        <div className="surface p-5 lg:col-span-3">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="display-title text-lg">Follow-ups due</p>
+              <p className="text-xs text-muted-foreground">
+                Leads scheduled for contact today or already overdue.
+              </p>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/leads">Open leads</Link>
+            </Button>
+          </div>
+          {dueFollowUps.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nothing due — schedule next contact dates from the Leads page.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {dueFollowUps.map((lead) => (
+                <Link
+                  key={lead.id}
+                  to="/leads"
+                  className="rounded-xl border border-border p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{lead.name}</p>
+                    <span
+                      className={`shrink-0 text-[11px] font-medium ${
+                        FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
+                      }`}
+                    >
+                      {FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {lead.property_title ?? "General enquiry"}
+                  </p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    {formatFollowUp(lead.follow_up_at)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
     </div>
   );
 }
