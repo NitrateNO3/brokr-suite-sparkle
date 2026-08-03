@@ -94,7 +94,24 @@ const schema = z.object({
   agent_whatsapp: z.string().optional().nullable(),
   agent_email: z.string().optional().nullable(),
   agent_office: z.string().optional().nullable(),
+  share_show_price: z.boolean(),
+  share_show_address: z.boolean(),
+  share_show_location: z.boolean(),
+  share_show_contact: z.boolean(),
+  share_show_description: z.boolean(),
+  share_show_amenities: z.boolean(),
+  share_show_specs: z.boolean(),
 });
+
+export const SHARE_FIELDS = [
+  { key: "share_show_price", label: "Price", hint: "Hide to share without any pricing" },
+  { key: "share_show_location", label: "City & sector", hint: "Broad location line" },
+  { key: "share_show_address", label: "Exact address", hint: "Street address and landmark" },
+  { key: "share_show_specs", label: "Specifications", hint: "Beds, baths, area, facing" },
+  { key: "share_show_description", label: "Description", hint: "About this property" },
+  { key: "share_show_amenities", label: "Amenities", hint: "Amenity chips" },
+  { key: "share_show_contact", label: "Agent contact", hint: "Phone number on the page" },
+] as const;
 
 export type PropertyFormValues = z.infer<typeof schema>;
 
