@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MessageSquare, Phone, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Mail,
+  MessageSquare,
+  Phone,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/PageHeader";
