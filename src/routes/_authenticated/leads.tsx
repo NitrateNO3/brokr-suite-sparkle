@@ -279,7 +279,22 @@ function LeadsPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={owner} onValueChange={setOwner}>
+          <SelectTrigger className="sm:w-48">
+            <SelectValue placeholder="Assignee" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All assignees</SelectItem>
+            <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+            {members.map((member) => (
+              <SelectItem key={member.id} value={member.id}>
+                {member.full_name ?? member.email ?? "Teammate"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
 
       {isLoading ? (
         <div className="space-y-3">
