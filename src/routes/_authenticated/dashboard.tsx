@@ -36,6 +36,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePropertiesQuery, useLeadsQuery, useViewsQuery } from "@/lib/queries";
 import { formatPrice, locationLine, timeAgo, formatNumber } from "@/lib/format";
+import {
+  FOLLOW_UP_LABEL,
+  FOLLOW_UP_TONE,
+  followUpState,
+  formatFollowUp,
+} from "@/lib/followup";
 import { labelFor, PROPERTY_TYPES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
