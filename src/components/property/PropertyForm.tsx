@@ -40,6 +40,7 @@ import {
 } from "@/lib/constants";
 import { generatePropertyCode, slugify } from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
+import { useTeamQuery } from "@/lib/roles";
 
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
