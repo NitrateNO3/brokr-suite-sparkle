@@ -13,6 +13,7 @@ import {
   BarChart3,
   Plus,
   ListChecks,
+  CalendarClock,
 } from "lucide-react";
 import {
   Area,
@@ -36,6 +37,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePropertiesQuery, useLeadsQuery, useViewsQuery } from "@/lib/queries";
 import { formatPrice, locationLine, timeAgo, formatNumber } from "@/lib/format";
+import {
+  FOLLOW_UP_LABEL,
+  FOLLOW_UP_TONE,
+  followUpState,
+  formatFollowUp,
+} from "@/lib/followup";
 import { labelFor, PROPERTY_TYPES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -122,6 +129,18 @@ function DashboardPage() {
   }, [views]);
 
   const recent = (properties ?? []).slice(0, 5);
+
+  const dueFollowUps = useMemo(
+    () =>
+      (leads ?? [])
+        .filter((l) => ["overdue", "today"].includes(followUpState(l.follow_up_at)))
+        .sort(
+          (a, b) =>
+            new Date(a.follow_up_at ?? 0).getTime() - new Date(b.follow_up_at ?? 0).getTime(),
+        )
+        .slice(0, 6),
+    [leads],
+  );
 
   const quickActions = [
     { label: "Add Property", to: "/properties/new", icon: Plus },
@@ -336,7 +355,55 @@ function DashboardPage() {
             ))}
           </div>
         </div>
+
+        <div className="surface p-5 lg:col-span-3">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="display-title text-lg">Follow-ups due</p>
+              <p className="text-xs text-muted-foreground">
+                Leads scheduled for contact today or already overdue.
+              </p>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/leads">Open leads</Link>
+            </Button>
+          </div>
+          {dueFollowUps.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nothing due — schedule next contact dates from the Leads page.
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {dueFollowUps.map((lead) => (
+                <Link
+                  key={lead.id}
+                  to="/leads"
+                  className="rounded-xl border border-border p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium">{lead.name}</p>
+                    <span
+                      className={`shrink-0 text-[11px] font-medium ${
+                        FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
+                      }`}
+                    >
+                      {FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {lead.property_title ?? "General enquiry"}
+                  </p>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    {formatFollowUp(lead.follow_up_at)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
     </div>
   );
 }

@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MessageSquare, Phone, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Mail,
+  MessageSquare,
+  Phone,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -30,6 +41,14 @@ import {
 import { useLeadsQuery, useUpdateLead, useDeleteLead, useCreateLead } from "@/lib/queries";
 import { useTeamQuery } from "@/lib/roles";
 import { timeAgo } from "@/lib/format";
+import {
+  FOLLOW_UP_LABEL,
+  FOLLOW_UP_TONE,
+  followUpState,
+  formatFollowUp,
+  fromLocalInput,
+  toLocalInput,
+} from "@/lib/followup";
 import { LEAD_STATUSES } from "@/lib/constants";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -63,6 +82,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
     source: "Walk-in",
     message: "",
     assigned_to: UNASSIGNED,
+    follow_up: "",
   });
 
   const reset = () =>
@@ -74,6 +94,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
       source: "Walk-in",
       message: "",
       assigned_to: UNASSIGNED,
+      follow_up: "",
     });
 
   return (
@@ -104,6 +125,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
                 source: form.source || null,
                 message: form.message || null,
                 assigned_to: form.assigned_to === UNASSIGNED ? null : form.assigned_to,
+                follow_up_at: fromLocalInput(form.follow_up),
               },
               {
                 onSuccess: () => {
@@ -177,6 +199,14 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
               </Select>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
+              <Label>Next follow-up</Label>
+              <Input
+                type="datetime-local"
+                value={form.follow_up}
+                onChange={(e) => setForm({ ...form, follow_up: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
               <Label>Notes / requirement</Label>
               <Textarea
                 rows={3}
@@ -204,6 +234,7 @@ function LeadsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [owner, setOwner] = useState("all");
+  const [dueOnly, setDueOnly] = useState(false);
 
   const members = useMemo(() => team ?? [], [team]);
   const nameOf = (id: string | null) => {
@@ -218,18 +249,27 @@ function LeadsPage() {
       if (status !== "all" && lead.status !== status) return false;
       if (owner === UNASSIGNED && lead.assigned_to) return false;
       if (owner !== "all" && owner !== UNASSIGNED && lead.assigned_to !== owner) return false;
+      if (dueOnly && !["overdue", "today"].includes(followUpState(lead.follow_up_at))) return false;
       if (!term) return true;
       return [lead.name, lead.email, lead.phone, lead.property_title]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term));
     });
-  }, [data, search, status, owner]);
+  }, [data, search, status, owner, dueOnly]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     (data ?? []).forEach((l) => map.set(l.status, (map.get(l.status) ?? 0) + 1));
     return map;
   }, [data]);
+
+  const dueCount = useMemo(
+    () =>
+      (data ?? []).filter((l) => ["overdue", "today"].includes(followUpState(l.follow_up_at)))
+        .length,
+    [data],
+  );
+
 
 
   return (
@@ -254,7 +294,19 @@ function LeadsPage() {
             <span className="text-muted-foreground">{counts.get(s.value) ?? 0}</span>
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setDueOnly((v) => !v)}
+          className={`surface flex items-center gap-1.5 px-4 py-2 text-xs transition-colors ${
+            dueOnly ? "ring-2 ring-primary" : ""
+          }`}
+        >
+          <CalendarClock className="h-3.5 w-3.5" />
+          <span className="font-medium">Follow-ups due</span>{" "}
+          <span className="text-muted-foreground">{dueCount}</span>
+        </button>
       </div>
+
 
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row">
         <div className="relative flex-1">
@@ -353,13 +405,72 @@ function LeadsPage() {
 
               <Textarea
                 rows={2}
-                placeholder="Internal notes…"
+                placeholder="Internal notes — site visit, budget, objections…"
                 defaultValue={lead.notes ?? ""}
                 onBlur={(e) => {
                   if (e.target.value === (lead.notes ?? "")) return;
-                  update.mutate({ id: lead.id, values: { notes: e.target.value } });
+                  update.mutate(
+                    { id: lead.id, values: { notes: e.target.value } },
+                    { onSuccess: () => toast.success("Notes saved") },
+                  );
                 }}
               />
+
+              <div className="rounded-lg border border-border/70 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span
+                    className={`flex items-center gap-1.5 text-xs font-medium ${
+                      FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
+                    }`}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    {FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]} ·{" "}
+                    {formatFollowUp(lead.follow_up_at)}
+                  </span>
+                  {lead.last_contacted_at && (
+                    <span className="text-[11px] text-muted-foreground">
+                      Contacted {timeAgo(lead.last_contacted_at)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    type="datetime-local"
+                    className="h-9 flex-1 min-w-44"
+                    value={toLocalInput(lead.follow_up_at)}
+                    onChange={(e) =>
+                      update.mutate(
+                        { id: lead.id, values: { follow_up_at: fromLocalInput(e.target.value) } },
+                        {
+                          onSuccess: () =>
+                            toast.success(
+                              e.target.value ? "Follow-up scheduled" : "Follow-up cleared",
+                            ),
+                        },
+                      )
+                    }
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      update.mutate(
+                        {
+                          id: lead.id,
+                          values: {
+                            last_contacted_at: new Date().toISOString(),
+                            follow_up_at: null,
+                          },
+                        },
+                        { onSuccess: () => toast.success("Marked as contacted") },
+                      )
+                    }
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Contacted
+                  </Button>
+                </div>
+              </div>
+
 
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
