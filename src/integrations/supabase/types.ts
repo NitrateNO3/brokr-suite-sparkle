@@ -138,6 +138,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "published_properties"
+            referencedColumns: ["id"]
+          },
         ]
       }
       locations: {
@@ -434,6 +441,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "property_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "published_properties"
+            referencedColumns: ["id"]
+          },
         ]
       }
       property_images: {
@@ -472,6 +486,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "published_properties"
+            referencedColumns: ["id"]
+          },
         ]
       }
       property_videos: {
@@ -504,6 +525,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "property_videos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "published_properties"
+            referencedColumns: ["id"]
+          },
         ]
       }
       property_views: {
@@ -531,6 +559,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_views_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "published_properties"
             referencedColumns: ["id"]
           },
         ]
@@ -612,7 +647,177 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      published_properties: {
+        Row: {
+          address: string | null
+          age: Database["public"]["Enums"]["property_age"] | null
+          agent_email: string | null
+          agent_name: string | null
+          agent_office: string | null
+          agent_phone: string | null
+          agent_whatsapp: string | null
+          amenities: string[] | null
+          area_unit: Database["public"]["Enums"]["area_unit"] | null
+          balconies: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          booking_amount: number | null
+          builtup_area: number | null
+          carpet_area: number | null
+          city: string | null
+          cover_image: string | null
+          created_at: string | null
+          description: string | null
+          facing: Database["public"]["Enums"]["facing_type"] | null
+          floor_no: number | null
+          furnishing: Database["public"]["Enums"]["furnishing_type"] | null
+          id: string | null
+          is_exclusive: boolean | null
+          is_featured: boolean | null
+          is_hot: boolean | null
+          is_premium: boolean | null
+          is_published: boolean | null
+          is_verified: boolean | null
+          keywords: string | null
+          landmark: string | null
+          latitude: number | null
+          longitude: number | null
+          maintenance_charges: number | null
+          maps_url: string | null
+          meta_description: string | null
+          meta_title: string | null
+          negotiable: boolean | null
+          parking: number | null
+          pin_code: string | null
+          price: number | null
+          property_code: string | null
+          property_type: Database["public"]["Enums"]["property_type"] | null
+          purpose: Database["public"]["Enums"]["property_purpose"] | null
+          sector: string | null
+          security_deposit: number | null
+          slug: string | null
+          status: Database["public"]["Enums"]["property_status"] | null
+          super_area: number | null
+          title: string | null
+          total_floors: number | null
+          updated_at: string | null
+          virtual_tour_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          address?: never
+          age?: Database["public"]["Enums"]["property_age"] | null
+          agent_email?: never
+          agent_name?: never
+          agent_office?: never
+          agent_phone?: never
+          agent_whatsapp?: never
+          amenities?: never
+          area_unit?: Database["public"]["Enums"]["area_unit"] | null
+          balconies?: never
+          bathrooms?: never
+          bedrooms?: never
+          booking_amount?: never
+          builtup_area?: never
+          carpet_area?: never
+          city?: never
+          cover_image?: string | null
+          created_at?: string | null
+          description?: never
+          facing?: never
+          floor_no?: never
+          furnishing?: never
+          id?: string | null
+          is_exclusive?: boolean | null
+          is_featured?: boolean | null
+          is_hot?: boolean | null
+          is_premium?: boolean | null
+          is_published?: boolean | null
+          is_verified?: boolean | null
+          keywords?: string | null
+          landmark?: never
+          latitude?: never
+          longitude?: never
+          maintenance_charges?: never
+          maps_url?: never
+          meta_description?: string | null
+          meta_title?: string | null
+          negotiable?: never
+          parking?: never
+          pin_code?: never
+          price?: never
+          property_code?: string | null
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          purpose?: Database["public"]["Enums"]["property_purpose"] | null
+          sector?: never
+          security_deposit?: never
+          slug?: string | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          super_area?: never
+          title?: string | null
+          total_floors?: never
+          updated_at?: string | null
+          virtual_tour_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          address?: never
+          age?: Database["public"]["Enums"]["property_age"] | null
+          agent_email?: never
+          agent_name?: never
+          agent_office?: never
+          agent_phone?: never
+          agent_whatsapp?: never
+          amenities?: never
+          area_unit?: Database["public"]["Enums"]["area_unit"] | null
+          balconies?: never
+          bathrooms?: never
+          bedrooms?: never
+          booking_amount?: never
+          builtup_area?: never
+          carpet_area?: never
+          city?: never
+          cover_image?: string | null
+          created_at?: string | null
+          description?: never
+          facing?: never
+          floor_no?: never
+          furnishing?: never
+          id?: string | null
+          is_exclusive?: boolean | null
+          is_featured?: boolean | null
+          is_hot?: boolean | null
+          is_premium?: boolean | null
+          is_published?: boolean | null
+          is_verified?: boolean | null
+          keywords?: string | null
+          landmark?: never
+          latitude?: never
+          longitude?: never
+          maintenance_charges?: never
+          maps_url?: never
+          meta_description?: string | null
+          meta_title?: string | null
+          negotiable?: never
+          parking?: never
+          pin_code?: never
+          price?: never
+          property_code?: string | null
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          purpose?: Database["public"]["Enums"]["property_purpose"] | null
+          sector?: never
+          security_deposit?: never
+          slug?: string | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          super_area?: never
+          title?: string | null
+          total_floors?: never
+          updated_at?: string | null
+          virtual_tour_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
