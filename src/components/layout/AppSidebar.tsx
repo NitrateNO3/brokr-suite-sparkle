@@ -5,6 +5,7 @@ import {
   PlusCircle,
   Users,
   UserRound,
+  ClipboardList,
   Images,
   BarChart3,
   MapPin,
