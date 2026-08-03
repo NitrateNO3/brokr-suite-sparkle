@@ -34,6 +34,7 @@ const workspace = [
   { title: "Properties", url: "/properties", icon: Building2 },
   { title: "Add Property", url: "/properties/new", icon: PlusCircle },
   { title: "Leads", url: "/leads", icon: Users },
+  { title: "Tasks", url: "/tasks", icon: ClipboardList },
   { title: "Customers", url: "/customers", icon: UserRound },
 ];
 
