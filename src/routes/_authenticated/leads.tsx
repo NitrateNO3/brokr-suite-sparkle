@@ -294,7 +294,19 @@ function LeadsPage() {
             <span className="text-muted-foreground">{counts.get(s.value) ?? 0}</span>
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setDueOnly((v) => !v)}
+          className={`surface flex items-center gap-1.5 px-4 py-2 text-xs transition-colors ${
+            dueOnly ? "ring-2 ring-primary" : ""
+          }`}
+        >
+          <CalendarClock className="h-3.5 w-3.5" />
+          <span className="font-medium">Follow-ups due</span>{" "}
+          <span className="text-muted-foreground">{dueCount}</span>
+        </button>
       </div>
+
 
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row">
         <div className="relative flex-1">
