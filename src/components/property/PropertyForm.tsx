@@ -181,6 +181,10 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const create = useCreateProperty();
   const update = useUpdateProperty();
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [coverIndex, setCoverIndex] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(schema),
