@@ -17,12 +17,14 @@ export const addTeamMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof schema>) => schema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+    const { data: adminRow, error: roleError } = await context.supabase
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
     if (roleError) throw roleError;
-    if (!isAdmin) throw new Error("Only admins can add teammates");
+    if (!adminRow) throw new Error("Only admins can add teammates");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
