@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Building2,
   FileText,
-
   Copy,
+  Download,
   ExternalLink,
   Pencil,
   Search,
@@ -22,6 +22,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ShareDialog } from "@/components/shared/ShareDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -45,9 +46,24 @@ import {
   useDeleteProperty,
   useDuplicateProperty,
   useUpdateProperty,
+  type Property,
 } from "@/lib/queries";
 import { formatPrice, formatNumber, locationLine, timeAgo } from "@/lib/format";
 import { CITIES, PROPERTY_TYPES, STATUSES, labelFor } from "@/lib/constants";
+import { downloadCsv } from "@/lib/export";
+
+const PAGE_SIZE = 12;
+
+const SORTS = [
+  { value: "recent", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "price_desc", label: "Price: high to low" },
+  { value: "price_asc", label: "Price: low to high" },
+  { value: "views", label: "Most viewed" },
+  { value: "title", label: "Title A–Z" },
+] as const;
+
+type SortKey = (typeof SORTS)[number]["value"];
 
 export const Route = createFileRoute("/_authenticated/properties/")({
   head: () => ({
@@ -71,15 +87,29 @@ function PropertiesPage() {
   const update = useUpdateProperty();
 
   const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [city, setCity] = useState("all");
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState<SortKey>("recent");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<string[]>([]);
   const [share, setShare] = useState<{ slug: string; title: string } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [bulkDelete, setBulkDelete] = useState(false);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(search), 250);
+    return () => window.clearTimeout(id);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debounced, city, type, status, sort]);
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return (data ?? []).filter((p) => {
+    const term = debounced.trim().toLowerCase();
+    const rows = (data ?? []).filter((p) => {
       if (city !== "all" && p.city !== city) return false;
       if (type !== "all" && p.property_type !== type) return false;
       if (status !== "all" && p.status !== status) return false;
@@ -88,7 +118,68 @@ function PropertiesPage() {
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term));
     });
-  }, [data, search, city, type, status]);
+
+    const sorted = [...rows];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "oldest":
+          return a.created_at.localeCompare(b.created_at);
+        case "price_desc":
+          return Number(b.price) - Number(a.price);
+        case "price_asc":
+          return Number(a.price) - Number(b.price);
+        case "views":
+          return (b.views ?? 0) - (a.views ?? 0);
+        case "title":
+          return a.title.localeCompare(b.title);
+        default:
+          return b.created_at.localeCompare(a.created_at);
+      }
+    });
+    return sorted;
+  }, [data, debounced, city, type, status, sort]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageIds = pageRows.map((p) => p.id);
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
+
+  const toggleRow = (id: string) =>
+    setSelected((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
+
+  const bulkUpdate = async (values: Parameters<typeof update.mutateAsync>[0]["values"]) => {
+    await Promise.all(selected.map((id) => update.mutateAsync({ id, values })));
+    toast.success(`Updated ${selected.length} ${selected.length === 1 ? "listing" : "listings"}`);
+    setSelected([]);
+  };
+
+  const exportCsv = (rows: Property[]) => {
+    if (!rows.length) {
+      toast.error("Nothing to export.");
+      return;
+    }
+    downloadCsv(
+      `brokrsuite-properties-${new Date().toISOString().slice(0, 10)}`,
+      rows.map((p) => ({
+        code: p.property_code,
+        title: p.title,
+        type: labelFor(PROPERTY_TYPES, p.property_type),
+        purpose: p.purpose,
+        status: p.status,
+        published: p.is_published ? "yes" : "no",
+        featured: p.is_featured ? "yes" : "no",
+        price: p.price,
+        city: p.city ?? "",
+        sector: p.sector ?? "",
+        bedrooms: p.bedrooms ?? "",
+        bathrooms: p.bathrooms ?? "",
+        views: p.views ?? 0,
+        public_url: `${window.location.origin}/property/${p.slug}`,
+        created_at: p.created_at,
+      })),
+    );
+    toast.success(`Exported ${rows.length} rows`);
+  };
 
   return (
     <div className="space-y-6">
@@ -96,24 +187,30 @@ function PropertiesPage() {
         title="Properties"
         description={`${formatNumber(data?.length ?? 0)} listings in your inventory.`}
         actions={
-          <Button asChild>
-            <Link to="/properties/new">Add property</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => exportCsv(filtered)}>
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+            <Button asChild>
+              <Link to="/properties/new">Add property</Link>
+            </Button>
+          </div>
         }
       />
 
-      <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-[220px] flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             className="pl-9"
             placeholder="Search by title, code or locality…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search properties"
           />
         </div>
         <Select value={city} onValueChange={setCity}>
-          <SelectTrigger className="sm:w-40">
+          <SelectTrigger className="sm:w-36" aria-label="Filter by city">
             <SelectValue placeholder="City" />
           </SelectTrigger>
           <SelectContent>
@@ -126,7 +223,7 @@ function PropertiesPage() {
           </SelectContent>
         </Select>
         <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="sm:w-44">
+          <SelectTrigger className="sm:w-40" aria-label="Filter by type">
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -139,7 +236,7 @@ function PropertiesPage() {
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="sm:w-40">
+          <SelectTrigger className="sm:w-36" aria-label="Filter by status">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -151,7 +248,55 @@ function PropertiesPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+          <SelectTrigger className="sm:w-44" aria-label="Sort listings">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            {SORTS.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+
+      {selected.length > 0 && (
+        <div className="surface flex flex-wrap items-center gap-2 p-3">
+          <span className="text-sm font-medium">{selected.length} selected</span>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => bulkUpdate({ is_published: true })}>
+              Publish
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => bulkUpdate({ is_published: false })}>
+              Unpublish
+            </Button>
+            <Select onValueChange={(value) => bulkUpdate({ status: value as Property["status"] })}>
+              <SelectTrigger className="h-8 w-36" aria-label="Bulk status update">
+                <SelectValue placeholder="Set status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => exportCsv(filtered.filter((p) => selected.includes(p.id)))}
+            >
+              Export
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setBulkDelete(true)}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
@@ -172,14 +317,37 @@ function PropertiesPage() {
         />
       ) : (
         <div className="space-y-3">
-          {filtered.map((property) => (
+          <div className="flex items-center gap-3 px-1">
+            <Checkbox
+              checked={allOnPageSelected}
+              onCheckedChange={(checked) =>
+                setSelected((prev) =>
+                  checked
+                    ? Array.from(new Set([...prev, ...pageIds]))
+                    : prev.filter((id) => !pageIds.includes(id)),
+                )
+              }
+              aria-label="Select all on this page"
+            />
+            <span className="text-muted-foreground text-xs">
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of{" "}
+              {formatNumber(filtered.length)}
+            </span>
+          </div>
+
+          {pageRows.map((property) => (
             <div
               key={property.id}
               className="surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center"
             >
+              <Checkbox
+                checked={selected.includes(property.id)}
+                onCheckedChange={() => toggleRow(property.id)}
+                aria-label={`Select ${property.title}`}
+              />
               <img
                 src={property.cover_image ?? ""}
-                alt={property.title}
+                alt={`${property.title} cover photo`}
                 loading="lazy"
                 className="h-32 w-full rounded-lg object-cover sm:h-20 sm:w-28"
               />
@@ -188,15 +356,15 @@ function PropertiesPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="truncate font-medium">{property.title}</p>
                   {property.is_featured && (
-                    <Star className="h-3.5 w-3.5 fill-brass text-brass" aria-label="Featured" />
+                    <Star className="fill-brass text-brass h-3.5 w-3.5" aria-label="Featured" />
                   )}
                   <StatusBadge status={property.status} />
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {property.property_code} · {labelFor(PROPERTY_TYPES, property.property_type)} ·{" "}
                   {locationLine(property.city, property.sector)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   Updated {timeAgo(property.updated_at)} · {formatNumber(property.views)} views
                 </p>
               </div>
@@ -206,6 +374,24 @@ function PropertiesPage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={property.is_featured ? "Remove from featured" : "Mark as featured"}
+                  onClick={() =>
+                    update.mutate(
+                      { id: property.id, values: { is_featured: !property.is_featured } },
+                      {
+                        onSuccess: () =>
+                          toast.success(property.is_featured ? "Unfeatured" : "Featured"),
+                      },
+                    )
+                  }
+                >
+                  <Star
+                    className={`h-4 w-4 ${property.is_featured ? "fill-brass text-brass" : ""}`}
+                  />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -244,7 +430,6 @@ function PropertiesPage() {
                     <FileText className="h-4 w-4" />
                   </Link>
                 </Button>
-
                 <Button
                   variant="ghost"
                   size="icon"
@@ -269,11 +454,35 @@ function PropertiesPage() {
                   aria-label="Delete"
                   onClick={() => setPendingDelete(property.id)}
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Trash2 className="text-destructive h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <span className="text-muted-foreground text-xs">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -307,6 +516,34 @@ function PropertiesPage() {
                   onError: (error) => toast.error(error.message),
                 });
                 setPendingDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkDelete} onOpenChange={setBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selected.length} listings?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Their public pages and media links are removed permanently. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setBulkDelete(false);
+                try {
+                  await Promise.all(selected.map((id) => remove.mutateAsync(id)));
+                  toast.success(`Deleted ${selected.length} listings`);
+                  setSelected([]);
+                } catch (error) {
+                  toast.error((error as Error).message);
+                }
               }}
             >
               Delete

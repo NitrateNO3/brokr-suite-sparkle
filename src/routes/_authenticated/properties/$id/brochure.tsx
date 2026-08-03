@@ -42,10 +42,7 @@ function BrochurePage() {
     ["Bathrooms", property.bathrooms ? String(property.bathrooms) : "—"],
     ["Balconies", property.balconies ? String(property.balconies) : "—"],
     ["Parking", property.parking ? String(property.parking) : "—"],
-    [
-      "Floor",
-      property.floor_no ? `${property.floor_no} of ${property.total_floors ?? "—"}` : "—",
-    ],
+    ["Floor", property.floor_no ? `${property.floor_no} of ${property.total_floors ?? "—"}` : "—"],
     ["Facing", property.facing ? labelFor(FACINGS, property.facing) : "—"],
     [
       "Carpet area",
@@ -80,7 +77,6 @@ function BrochurePage() {
               {settings?.phone ?? property.agent_phone ?? ""}
               {settings?.email ? ` · ${settings.email}` : ""}
             </p>
-
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing</p>

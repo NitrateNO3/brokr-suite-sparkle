@@ -14,7 +14,7 @@ const DEMO_PASSWORD = "Brokrsuit.deeprealesate";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { next?: string } => {
-    const raw = s['next'];
+    const raw = s["next"];
     const safe =
       typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//") ? raw : null;
     return safe ? { next: safe } : {};
@@ -106,8 +106,8 @@ function AuthPage() {
             The quiet operating system for modern brokerages.
           </h1>
           <p className="mt-4 text-sm/relaxed text-primary-foreground/80">
-            Manage inventory, capture leads and publish beautiful shareable property pages —
-            without touching a line of code.
+            Manage inventory, capture leads and publish beautiful shareable property pages — without
+            touching a line of code.
           </p>
         </motion.div>
 
@@ -134,9 +134,7 @@ function AuthPage() {
           <h2 className="display-title text-2xl">
             {mode === "signin" ? "Sign in to your portal" : "Create your account"}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Deep Real Estate agency workspace.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Deep Real Estate agency workspace.</p>
 
           <form
             className="mt-8 space-y-4"

@@ -11,7 +11,6 @@ import {
   Sparkles,
   Settings as SettingsIcon,
   ShieldCheck,
-
   CircleUser,
   LogOut,
 } from "lucide-react";
@@ -50,7 +49,6 @@ const account = [
   { title: "Settings", url: "/settings", icon: SettingsIcon },
   { title: "Profile", url: "/profile", icon: CircleUser },
 ];
-
 
 export function AppSidebar() {
   const { state } = useSidebar();

@@ -66,7 +66,9 @@ function LocationsPage() {
                   className="rounded-full border border-border px-3 py-1.5 text-xs"
                 >
                   {row.sector}
-                  <span className="ml-2 text-muted-foreground">{counts.get(row.sector ?? "") ?? 0}</span>
+                  <span className="ml-2 text-muted-foreground">
+                    {counts.get(row.sector ?? "") ?? 0}
+                  </span>
                 </span>
               ))}
             </div>

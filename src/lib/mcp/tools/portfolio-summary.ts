@@ -46,8 +46,18 @@ export default defineTool({
     }
 
     return ok({
-      properties: { total: props.data?.length ?? 0, by_status: byStatus, by_city: byCity, portfolio_value: portfolioValue },
-      leads: { total: leads.data?.length ?? 0, by_status: leadsByStatus, [`new_last_${input.days ?? 30}_days`]: recentLeads, due_follow_ups: dueFollowUps },
+      properties: {
+        total: props.data?.length ?? 0,
+        by_status: byStatus,
+        by_city: byCity,
+        portfolio_value: portfolioValue,
+      },
+      leads: {
+        total: leads.data?.length ?? 0,
+        by_status: leadsByStatus,
+        [`new_last_${input.days ?? 30}_days`]: recentLeads,
+        due_follow_ups: dueFollowUps,
+      },
     });
   },
 });

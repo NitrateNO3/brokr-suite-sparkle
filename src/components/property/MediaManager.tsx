@@ -72,7 +72,10 @@ export function MediaManager({
   };
 
   const setFeatured = async (id: string, url: string) => {
-    await supabase.from("property_images").update({ is_featured: false }).eq("property_id", propertyId);
+    await supabase
+      .from("property_images")
+      .update({ is_featured: false })
+      .eq("property_id", propertyId);
     await supabase.from("property_images").update({ is_featured: true }).eq("id", id);
     onCoverChange(url);
     toast.success("Featured image updated — save the listing to apply");
@@ -126,7 +129,10 @@ export function MediaManager({
       ) : images?.length ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image) => (
-            <div key={image.id} className="group relative overflow-hidden rounded-xl border border-border">
+            <div
+              key={image.id}
+              className="group relative overflow-hidden rounded-xl border border-border"
+            >
               <img
                 src={image.url}
                 alt={image.alt ?? "Property"}
@@ -139,16 +145,40 @@ export function MediaManager({
                 </span>
               )}
               <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1 bg-gradient-to-t from-foreground/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => move(image.id, -1)} aria-label="Move left">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-7 w-7"
+                  onClick={() => move(image.id, -1)}
+                  aria-label="Move left"
+                >
                   <ArrowLeft className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => setFeatured(image.id, image.url)} aria-label="Set featured">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-7 w-7"
+                  onClick={() => setFeatured(image.id, image.url)}
+                  aria-label="Set featured"
+                >
                   <Star className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="secondary" className="h-7 w-7" onClick={() => move(image.id, 1)} aria-label="Move right">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="h-7 w-7"
+                  onClick={() => move(image.id, 1)}
+                  aria-label="Move right"
+                >
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="destructive" className="h-7 w-7" onClick={() => remove(image.id)} aria-label="Delete">
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="h-7 w-7"
+                  onClick={() => remove(image.id)}
+                  aria-label="Delete"
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>

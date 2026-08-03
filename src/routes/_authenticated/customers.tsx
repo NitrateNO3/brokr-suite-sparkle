@@ -53,7 +53,9 @@ function CustomersPage() {
     return Array.from(map.values())
       .filter((c) =>
         term
-          ? [c.name, c.email, c.phone].filter(Boolean).some((f) => String(f).toLowerCase().includes(term))
+          ? [c.name, c.email, c.phone]
+              .filter(Boolean)
+              .some((f) => String(f).toLowerCase().includes(term))
           : true,
       )
       .sort((a, b) => b.last.localeCompare(a.last));
@@ -89,7 +91,10 @@ function CustomersPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {customers.map((customer) => (
-            <div key={`${customer.name}-${customer.phone ?? customer.email}`} className="surface p-4">
+            <div
+              key={`${customer.name}-${customer.phone ?? customer.email}`}
+              className="surface p-4"
+            >
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-medium text-primary">
                   {customer.name.charAt(0).toUpperCase()}

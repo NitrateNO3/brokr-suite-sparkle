@@ -66,7 +66,7 @@ export const getPublicProperty = createServerFn({ method: "GET" })
         "total_floors",
         "facing",
         "furnishing",
-        "area",
+        "super_area",
         "carpet_area",
         "builtup_area",
         "super_area",
@@ -84,7 +84,6 @@ export const getPublicProperty = createServerFn({ method: "GET" })
     }
     return redacted as typeof property;
   });
-
 
 /** Records an anonymous page view and bumps the denormalised counter. */
 export const recordPropertyView = createServerFn({ method: "POST" })

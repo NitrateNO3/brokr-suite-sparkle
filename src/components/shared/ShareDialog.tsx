@@ -62,7 +62,9 @@ export function ShareDialog({
             </a>
           </Button>
           <Button variant="outline" asChild>
-            <a href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`}>
+            <a
+              href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`}
+            >
               <Mail className="h-4 w-4" /> Email
             </a>
           </Button>

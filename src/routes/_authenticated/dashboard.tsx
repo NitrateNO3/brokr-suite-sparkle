@@ -37,12 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePropertiesQuery, useLeadsQuery, useViewsQuery } from "@/lib/queries";
 import { formatPrice, locationLine, timeAgo, formatNumber } from "@/lib/format";
-import {
-  FOLLOW_UP_LABEL,
-  FOLLOW_UP_TONE,
-  followUpState,
-  formatFollowUp,
-} from "@/lib/followup";
+import { FOLLOW_UP_LABEL, FOLLOW_UP_TONE, followUpState, formatFollowUp } from "@/lib/followup";
 import { labelFor, PROPERTY_TYPES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -173,12 +168,24 @@ function DashboardPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard index={0} label="Total properties" value={stats.total} icon={Building2} />
-          <StatCard index={1} label="Active listings" value={stats.active} icon={BadgeCheck} tone="success" />
+          <StatCard
+            index={1}
+            label="Active listings"
+            value={stats.active}
+            icon={BadgeCheck}
+            tone="success"
+          />
           <StatCard index={2} label="Sold / rented" value={stats.sold} icon={IndianRupee} />
           <StatCard index={3} label="Draft listings" value={stats.drafts} icon={FileEdit} />
           <StatCard index={4} label="Featured" value={stats.featured} icon={Star} tone="brass" />
           <StatCard index={5} label="Total views" value={formatNumber(stats.views)} icon={Eye} />
-          <StatCard index={6} label="New leads" value={stats.newLeads} icon={UserPlus} tone="brass" />
+          <StatCard
+            index={6}
+            label="New leads"
+            value={stats.newLeads}
+            icon={UserPlus}
+            tone="brass"
+          />
           <StatCard
             index={7}
             label="Portfolio value"
@@ -219,7 +226,11 @@ function DashboardPage() {
                     <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  vertical={false}
+                />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} fontSize={11} />
                 <YAxis tickLine={false} axisLine={false} fontSize={11} width={28} />
                 <Tooltip
@@ -294,7 +305,11 @@ function DashboardPage() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={typeBreakdown} layout="vertical" margin={{ left: 24 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  horizontal={false}
+                />
                 <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} />
                 <YAxis
                   type="category"
@@ -348,7 +363,9 @@ function DashboardPage() {
                 </div>
                 <div className="hidden text-right sm:block">
                   <p className="text-sm font-semibold">{formatPrice(Number(property.price))}</p>
-                  <p className="text-xs text-muted-foreground">{formatNumber(property.views)} views</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatNumber(property.views)} views
+                  </p>
                 </div>
                 <StatusBadge status={property.status} />
               </Link>
@@ -403,7 +420,6 @@ function DashboardPage() {
           )}
         </div>
       </div>
-
     </div>
   );
 }

@@ -29,8 +29,11 @@ function EditPropertyPage() {
         title={data?.title ?? "Edit property"}
         description={data ? `${data.property_code} · updates go live instantly.` : ""}
       />
-      {isLoading ? <Skeleton className="h-96 rounded-xl" /> : <PropertyForm property={data ?? null} />}
+      {isLoading ? (
+        <Skeleton className="h-96 rounded-xl" />
+      ) : (
+        <PropertyForm property={data ?? null} />
+      )}
     </div>
-
   );
 }

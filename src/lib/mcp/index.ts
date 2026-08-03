@@ -6,7 +6,7 @@ import createLead from "./tools/create-lead";
 import updateLead from "./tools/update-lead";
 import portfolioSummary from "./tools/portfolio-summary";
 
-const projectRef = import.meta.env['VITE_SUPABASE_PROJECT_ID'] ?? "project-ref-unset";
+const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
 export default defineMcp({
   name: "brokrsuite-pro",
@@ -18,7 +18,12 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [searchProperties, getProperty, listLeads, createLead, updateLead, portfolioSummary] as unknown as Parameters<
-    typeof defineMcp
-  >[0]["tools"],
+  tools: [
+    searchProperties,
+    getProperty,
+    listLeads,
+    createLead,
+    updateLead,
+    portfolioSummary,
+  ] as unknown as Parameters<typeof defineMcp>[0]["tools"],
 });

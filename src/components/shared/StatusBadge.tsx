@@ -21,7 +21,13 @@ const leadTone: Record<string, string> = {
   lost: "bg-destructive/12 text-destructive border-destructive/25",
 };
 
-export function StatusBadge({ status, kind = "property" }: { status: string; kind?: "property" | "lead" }) {
+export function StatusBadge({
+  status,
+  kind = "property",
+}: {
+  status: string;
+  kind?: "property" | "lead";
+}) {
   const tone = kind === "lead" ? leadTone[status] : propertyTone[status];
   const label = labelFor(kind === "lead" ? LEAD_STATUSES : STATUSES, status);
   return (

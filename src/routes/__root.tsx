@@ -14,7 +14,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -112,7 +111,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -148,5 +146,4 @@ function RootComponent() {
       <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   );
-
 }

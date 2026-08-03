@@ -48,10 +48,7 @@ export function MultiSelectChips({
                 {options.map((item) => (
                   <CommandItem key={item} value={item} onSelect={() => toggle(item)}>
                     <Check
-                      className={cn(
-                        "h-4 w-4",
-                        value.includes(item) ? "opacity-100" : "opacity-0",
-                      )}
+                      className={cn("h-4 w-4", value.includes(item) ? "opacity-100" : "opacity-0")}
                     />
                     {item}
                   </CommandItem>

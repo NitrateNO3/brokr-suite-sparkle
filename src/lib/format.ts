@@ -50,6 +50,9 @@ export function generatePropertyCode(): string {
 }
 
 export function locationLine(city?: string | null, sector?: string | null): string {
-  if (sector) return `Sector ${sector}, ${city ?? ""}`.trim();
-  return city ?? "—";
+  if (!sector) return city ?? "—";
+  // Sector labels are stored as free text ("Sector 54", "Sushant Lok Phase 1"),
+  // so only prefix "Sector" when it is a bare number.
+  const label = /^\d/.test(sector.trim()) ? `Sector ${sector.trim()}` : sector.trim();
+  return city ? `${label}, ${city}` : label;
 }
