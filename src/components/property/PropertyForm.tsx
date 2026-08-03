@@ -354,6 +354,8 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           <TabsTrigger value="amenities">Amenities</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="seo">SEO &amp; Flags</TabsTrigger>
+          <TabsTrigger value="sharing">Sharing</TabsTrigger>
+
           <TabsTrigger value="agent">Agent</TabsTrigger>
         </TabsList>
 
