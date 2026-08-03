@@ -405,13 +405,72 @@ function LeadsPage() {
 
               <Textarea
                 rows={2}
-                placeholder="Internal notes…"
+                placeholder="Internal notes — site visit, budget, objections…"
                 defaultValue={lead.notes ?? ""}
                 onBlur={(e) => {
                   if (e.target.value === (lead.notes ?? "")) return;
-                  update.mutate({ id: lead.id, values: { notes: e.target.value } });
+                  update.mutate(
+                    { id: lead.id, values: { notes: e.target.value } },
+                    { onSuccess: () => toast.success("Notes saved") },
+                  );
                 }}
               />
+
+              <div className="rounded-lg border border-border/70 p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span
+                    className={`flex items-center gap-1.5 text-xs font-medium ${
+                      FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
+                    }`}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    {FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]} ·{" "}
+                    {formatFollowUp(lead.follow_up_at)}
+                  </span>
+                  {lead.last_contacted_at && (
+                    <span className="text-[11px] text-muted-foreground">
+                      Contacted {timeAgo(lead.last_contacted_at)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    type="datetime-local"
+                    className="h-9 flex-1 min-w-44"
+                    value={toLocalInput(lead.follow_up_at)}
+                    onChange={(e) =>
+                      update.mutate(
+                        { id: lead.id, values: { follow_up_at: fromLocalInput(e.target.value) } },
+                        {
+                          onSuccess: () =>
+                            toast.success(
+                              e.target.value ? "Follow-up scheduled" : "Follow-up cleared",
+                            ),
+                        },
+                      )
+                    }
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() =>
+                      update.mutate(
+                        {
+                          id: lead.id,
+                          values: {
+                            last_contacted_at: new Date().toISOString(),
+                            follow_up_at: null,
+                          },
+                        },
+                        { onSuccess: () => toast.success("Marked as contacted") },
+                      )
+                    }
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Contacted
+                  </Button>
+                </div>
+              </div>
+
 
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
