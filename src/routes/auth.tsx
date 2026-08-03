@@ -13,11 +13,12 @@ const DEMO_EMAIL = "manavyadav34@gmail.com";
 const DEMO_PASSWORD = "Brokrsuit.deeprealesate";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s['next'] === "string" && s['next'].startsWith("/") && !s['next'].startsWith("//")
-      ? s['next']
-      : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const raw = s['next'];
+    const safe =
+      typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//") ? raw : null;
+    return safe ? { next: safe } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — BrokrSuite Agency Portal" },
