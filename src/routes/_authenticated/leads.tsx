@@ -82,6 +82,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
     source: "Walk-in",
     message: "",
     assigned_to: UNASSIGNED,
+    follow_up: "",
   });
 
   const reset = () =>
@@ -93,6 +94,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
       source: "Walk-in",
       message: "",
       assigned_to: UNASSIGNED,
+      follow_up: "",
     });
 
   return (
