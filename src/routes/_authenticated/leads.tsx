@@ -234,6 +234,7 @@ function LeadsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [owner, setOwner] = useState("all");
+  const [dueOnly, setDueOnly] = useState(false);
 
   const members = useMemo(() => team ?? [], [team]);
   const nameOf = (id: string | null) => {
@@ -248,18 +249,27 @@ function LeadsPage() {
       if (status !== "all" && lead.status !== status) return false;
       if (owner === UNASSIGNED && lead.assigned_to) return false;
       if (owner !== "all" && owner !== UNASSIGNED && lead.assigned_to !== owner) return false;
+      if (dueOnly && !["overdue", "today"].includes(followUpState(lead.follow_up_at))) return false;
       if (!term) return true;
       return [lead.name, lead.email, lead.phone, lead.property_title]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term));
     });
-  }, [data, search, status, owner]);
+  }, [data, search, status, owner, dueOnly]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     (data ?? []).forEach((l) => map.set(l.status, (map.get(l.status) ?? 0) + 1));
     return map;
   }, [data]);
+
+  const dueCount = useMemo(
+    () =>
+      (data ?? []).filter((l) => ["overdue", "today"].includes(followUpState(l.follow_up_at)))
+        .length,
+    [data],
+  );
+
 
 
   return (
