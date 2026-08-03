@@ -20,70 +20,30 @@ function publicClient() {
   });
 }
 
-/** Public, RLS-scoped read of one published listing plus its gallery. */
+type PublicProperty = Database["public"]["Tables"]["properties"]["Row"] & {
+  property_images: Database["public"]["Tables"]["property_images"]["Row"][];
+};
+
+/**
+ * Public read of one published listing plus its gallery.
+ * Redaction happens inside the database function, so hidden fields never leave
+ * the server and cannot be recovered by querying the table directly.
+ */
 export const getPublicProperty = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }) => {
     const supabase = publicClient();
-    const { data: property, error } = await supabase
-      .from("properties")
-      .select("*, property_images(*)")
-      .eq("slug", data.slug)
-      .eq("is_published", true)
-      .maybeSingle();
-    if (error) throw error;
+    const { data: property, error } = await (
+      supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>
+    )("get_published_property", { p_slug: data.slug });
+    if (error) throw new Error(error.message);
     if (!property) return null;
-
-    // Redact anything the agent chose not to share, so hidden values never
-    // reach the browser payload at all.
-    const redacted = { ...property } as Record<string, unknown>;
-    if (!property.share_show_price) {
-      redacted["price"] = null;
-      redacted["negotiable"] = false;
-      redacted["maintenance_charges"] = null;
-      redacted["booking_amount"] = null;
-      redacted["security_deposit"] = null;
-    }
-    if (!property.share_show_location) {
-      redacted["city"] = null;
-      redacted["sector"] = null;
-      redacted["pin_code"] = null;
-    }
-    if (!property.share_show_address) {
-      redacted["address"] = null;
-      redacted["landmark"] = null;
-      redacted["latitude"] = null;
-      redacted["longitude"] = null;
-      redacted["maps_url"] = null;
-    }
-    if (!property.share_show_specs) {
-      for (const key of [
-        "bedrooms",
-        "bathrooms",
-        "balconies",
-        "parking",
-        "floor_no",
-        "total_floors",
-        "facing",
-        "furnishing",
-        "super_area",
-        "carpet_area",
-        "builtup_area",
-        "super_area",
-      ]) {
-        redacted[key] = null;
-      }
-    }
-    if (!property.share_show_description) redacted["description"] = null;
-    if (!property.share_show_amenities) redacted["amenities"] = [];
-    if (!property.share_show_contact) {
-      redacted["agent_phone"] = null;
-      redacted["agent_whatsapp"] = null;
-      redacted["agent_email"] = null;
-      redacted["agent_office"] = null;
-    }
-    return redacted as typeof property;
+    return property as PublicProperty;
   });
+
 
 /** Records an anonymous page view and bumps the denormalised counter. */
 export const recordPropertyView = createServerFn({ method: "POST" })
