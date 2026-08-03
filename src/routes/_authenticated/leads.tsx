@@ -125,6 +125,7 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
                 source: form.source || null,
                 message: form.message || null,
                 assigned_to: form.assigned_to === UNASSIGNED ? null : form.assigned_to,
+                follow_up_at: fromLocalInput(form.follow_up),
               },
               {
                 onSuccess: () => {
