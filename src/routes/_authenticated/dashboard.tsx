@@ -13,6 +13,7 @@ import {
   BarChart3,
   Plus,
   ListChecks,
+  CalendarClock,
 } from "lucide-react";
 import {
   Area,
