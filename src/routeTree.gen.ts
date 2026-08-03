@@ -21,6 +21,7 @@ import { Route as AuthenticatedLocationsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMediaRouteImport } from './routes/_authenticated/media'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as PropertySlugRouteImport } from './routes/property/$slug'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties/new'
 import { Route as AuthenticatedPropertiesIdEditRouteImport } from './routes/_authenticated/properties/$id/edit'
@@ -84,6 +85,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PropertySlugRoute = PropertySlugRouteImport.update({
+  id: '/property/$slug',
+  path: '/property/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPropertiesIndexRoute =
   AuthenticatedPropertiesIndexRouteImport.update({
     id: '/properties/',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/media': typeof AuthenticatedMediaRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/property/$slug': typeof PropertySlugRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/media': typeof AuthenticatedMediaRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/property/$slug': typeof PropertySlugRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
   '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated/media': typeof AuthenticatedMediaRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/property/$slug': typeof PropertySlugRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
   '/_authenticated/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/media'
     | '/profile'
     | '/settings'
+    | '/property/$slug'
     | '/properties/new'
     | '/properties/'
     | '/properties/$id/edit'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/media'
     | '/profile'
     | '/settings'
+    | '/property/$slug'
     | '/properties/new'
     | '/properties'
     | '/properties/$id/edit'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_authenticated/media'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
+    | '/property/$slug'
     | '/_authenticated/properties/new'
     | '/_authenticated/properties/'
     | '/_authenticated/properties/$id/edit'
@@ -209,6 +221,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PropertySlugRoute: typeof PropertySlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -297,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/property/$slug': {
+      id: '/property/$slug'
+      path: '/property/$slug'
+      fullPath: '/property/$slug'
+      preLoaderRoute: typeof PropertySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/properties/': {
       id: '/_authenticated/properties/'
       path: '/properties'
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PropertySlugRoute: PropertySlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
