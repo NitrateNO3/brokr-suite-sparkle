@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MessageSquare, Phone, Search, Trash2, Users } from "lucide-react";
+import { Mail, MessageSquare, Phone, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -8,8 +8,18 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -17,12 +27,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useLeadsQuery, useUpdateLead, useDeleteLead } from "@/lib/queries";
+import { useLeadsQuery, useUpdateLead, useDeleteLead, useCreateLead } from "@/lib/queries";
+import { useTeamQuery } from "@/lib/roles";
 import { timeAgo } from "@/lib/format";
 import { LEAD_STATUSES } from "@/lib/constants";
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
+
+const UNASSIGNED = "unassigned";
 
 export const Route = createFileRoute("/_authenticated/leads")({
   head: () => ({
@@ -39,29 +52,185 @@ export const Route = createFileRoute("/_authenticated/leads")({
   component: LeadsPage,
 });
 
+function AddLeadDialog({ team }: { team: { id: string; full_name: string | null; email: string | null }[] }) {
+  const create = useCreateLead();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    property_title: "",
+    source: "Walk-in",
+    message: "",
+    assigned_to: UNASSIGNED,
+  });
+
+  const reset = () =>
+    setForm({
+      name: "",
+      phone: "",
+      email: "",
+      property_title: "",
+      source: "Walk-in",
+      message: "",
+      assigned_to: UNASSIGNED,
+    });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4" /> Add lead
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="display-title">Add a lead</DialogTitle>
+          <DialogDescription>
+            Log an enquiry that came in by phone, walk-in or referral and assign it to a teammate.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            create.mutate(
+              {
+                name: form.name,
+                phone: form.phone || null,
+                email: form.email || null,
+                property_title: form.property_title || null,
+                source: form.source || null,
+                message: form.message || null,
+                assigned_to: form.assigned_to === UNASSIGNED ? null : form.assigned_to,
+              },
+              {
+                onSuccess: () => {
+                  toast.success("Lead added");
+                  reset();
+                  setOpen(false);
+                },
+                onError: (error) =>
+                  toast.error(error instanceof Error ? error.message : "Could not add lead"),
+              },
+            );
+          }}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Source</Label>
+              <Input
+                value={form.source}
+                placeholder="Walk-in, referral, portal…"
+                onChange={(e) => setForm({ ...form, source: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Interested in</Label>
+              <Input
+                value={form.property_title}
+                placeholder="Property or requirement"
+                onChange={(e) => setForm({ ...form, property_title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Assign to</Label>
+              <Select
+                value={form.assigned_to}
+                onValueChange={(v) => setForm({ ...form, assigned_to: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                  {team.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name ?? member.email ?? "Teammate"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Notes / requirement</Label>
+              <Textarea
+                rows={3}
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={create.isPending}>
+              Save lead
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function LeadsPage() {
   const { data, isLoading } = useLeadsQuery();
+  const { data: team } = useTeamQuery();
   const update = useUpdateLead();
   const remove = useDeleteLead();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [owner, setOwner] = useState("all");
+
+  const members = useMemo(() => team ?? [], [team]);
+  const nameOf = (id: string | null) => {
+    if (!id) return "Unassigned";
+    const member = members.find((m) => m.id === id);
+    return member?.full_name ?? member?.email ?? "Teammate";
+  };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data ?? []).filter((lead) => {
       if (status !== "all" && lead.status !== status) return false;
+      if (owner === UNASSIGNED && lead.assigned_to) return false;
+      if (owner !== "all" && owner !== UNASSIGNED && lead.assigned_to !== owner) return false;
       if (!term) return true;
       return [lead.name, lead.email, lead.phone, lead.property_title]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term));
     });
-  }, [data, search, status]);
+  }, [data, search, status, owner]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     (data ?? []).forEach((l) => map.set(l.status, (map.get(l.status) ?? 0) + 1));
     return map;
   }, [data]);
+
 
   return (
     <div className="space-y-6">
