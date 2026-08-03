@@ -82,7 +82,7 @@ function PropertiesPage() {
       if (type !== "all" && p.property_type !== type) return false;
       if (status !== "all" && p.status !== status) return false;
       if (!term) return true;
-      return [p.title, p.property_code, p.sector, p.locality, p.city]
+      return [p.title, p.property_code, p.sector, p.address, p.city]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term));
     });
@@ -242,7 +242,7 @@ function PropertiesPage() {
                   size="icon"
                   aria-label="Duplicate"
                   onClick={() =>
-                    duplicate.mutate(property.id, {
+                    duplicate.mutate(property, {
                       onSuccess: () => toast.success("Duplicated as a draft"),
                       onError: (error) => toast.error(error.message),
                     })

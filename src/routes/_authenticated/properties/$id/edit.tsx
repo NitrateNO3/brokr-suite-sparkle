@@ -27,9 +27,10 @@ function EditPropertyPage() {
     <div className="space-y-6">
       <PageHeader
         title={data?.title ?? "Edit property"}
-        description={data ? `${data.property_code} · updates go live instantly.` : undefined}
+        description={data ? `${data.property_code} · updates go live instantly.` : ""}
       />
-      {isLoading ? <Skeleton className="h-96 rounded-xl" /> : <PropertyForm property={data} />}
+      {isLoading ? <Skeleton className="h-96 rounded-xl" /> : <PropertyForm property={data ?? null} />}
     </div>
+
   );
 }
