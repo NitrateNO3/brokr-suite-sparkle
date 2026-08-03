@@ -71,7 +71,10 @@ function ProfilePage() {
           <p className="display-title text-lg">Recent activity</p>
           <div className="mt-4 space-y-3">
             {(activity ?? []).map((entry) => (
-              <div key={entry.id} className="flex items-start gap-3 border-b border-border pb-3 last:border-0">
+              <div
+                key={entry.id}
+                className="flex items-start gap-3 border-b border-border pb-3 last:border-0"
+              >
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">{entry.action}</p>

@@ -3,6 +3,7 @@ import { Menu, Moon, Sun, Plus } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
@@ -35,6 +36,7 @@ function AuthenticatedLayout() {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              <GlobalSearch />
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>

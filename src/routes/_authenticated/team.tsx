@@ -29,7 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES, roleLabel, useMyRoles, useTeamQuery, useToggleRole, type AppRole } from "@/lib/roles";
+import {
+  ROLES,
+  roleLabel,
+  useMyRoles,
+  useTeamQuery,
+  useToggleRole,
+  type AppRole,
+} from "@/lib/roles";
 import { addTeamMember } from "@/lib/team.functions";
 import { formatDate } from "@/lib/format";
 
@@ -191,7 +198,6 @@ function TeamPage() {
         }
         actions={isAdmin ? <AddTeamMemberDialog /> : undefined}
       />
-
 
       <div className="surface flex flex-wrap gap-4 p-4 text-xs text-muted-foreground">
         {ROLES.map((role) => (

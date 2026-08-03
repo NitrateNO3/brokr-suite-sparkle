@@ -71,7 +71,11 @@ export const Route = createFileRoute("/_authenticated/leads")({
   component: LeadsPage,
 });
 
-function AddLeadDialog({ team }: { team: { id: string; full_name: string | null; email: string | null }[] }) {
+function AddLeadDialog({
+  team,
+}: {
+  team: { id: string; full_name: string | null; email: string | null }[];
+}) {
   const create = useCreateLead();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -270,8 +274,6 @@ function LeadsPage() {
     [data],
   );
 
-
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -306,7 +308,6 @@ function LeadsPage() {
           <span className="text-muted-foreground">{dueCount}</span>
         </button>
       </div>
-
 
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row">
         <div className="relative flex-1">
@@ -347,7 +348,6 @@ function LeadsPage() {
         </Select>
       </div>
 
-
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -376,12 +376,18 @@ function LeadsPage() {
 
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                 {lead.phone && (
-                  <a className="flex items-center gap-1 hover:text-foreground" href={`tel:${lead.phone}`}>
+                  <a
+                    className="flex items-center gap-1 hover:text-foreground"
+                    href={`tel:${lead.phone}`}
+                  >
                     <Phone className="h-3.5 w-3.5" /> {lead.phone}
                   </a>
                 )}
                 {lead.email && (
-                  <a className="flex items-center gap-1 hover:text-foreground" href={`mailto:${lead.email}`}>
+                  <a
+                    className="flex items-center gap-1 hover:text-foreground"
+                    href={`mailto:${lead.email}`}
+                  >
                     <Mail className="h-3.5 w-3.5" /> {lead.email}
                   </a>
                 )}
@@ -471,7 +477,6 @@ function LeadsPage() {
                 </div>
               </div>
 
-
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <UserRound className="h-3.5 w-3.5" /> {nameOf(lead.assigned_to)}
@@ -508,7 +513,6 @@ function LeadsPage() {
                   </SelectContent>
                 </Select>
               </div>
-
 
               <div className="flex items-center gap-2">
                 <Select

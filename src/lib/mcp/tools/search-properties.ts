@@ -8,7 +8,11 @@ export default defineTool({
   description:
     "Search the agency property inventory by keyword, city, status, purpose or price range.",
   inputSchema: {
-    query: z.string().trim().optional().describe("Free-text match on title, address or property code."),
+    query: z
+      .string()
+      .trim()
+      .optional()
+      .describe("Free-text match on title, address or property code."),
     city: z.string().trim().optional().describe("City filter, e.g. Gurgaon."),
     status: z.string().trim().optional().describe("Listing status, e.g. published, draft, sold."),
     purpose: z.string().trim().optional().describe("sale or rent."),
@@ -22,11 +26,16 @@ export default defineTool({
     const supabase = supabaseForUser(ctx);
     let q = supabase
       .from("properties")
-      .select("id, property_code, title, slug, city, sector, address, price, purpose, status, property_type, bedrooms, bathrooms, area, area_unit, created_at")
+      .select(
+        "id, property_code, title, slug, city, sector, address, price, purpose, status, property_type, bedrooms, bathrooms, carpet_area, builtup_area, super_area, area_unit, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(input.limit ?? 20);
 
-    if (input.query) q = q.or(`title.ilike.%${input.query}%,address.ilike.%${input.query}%,property_code.ilike.%${input.query}%`);
+    if (input.query)
+      q = q.or(
+        `title.ilike.%${input.query}%,address.ilike.%${input.query}%,property_code.ilike.%${input.query}%`,
+      );
     if (input.city) q = q.ilike("city", `%${input.city}%`);
     if (input.status) q = q.eq("status", input.status);
     if (input.purpose) q = q.eq("purpose", input.purpose);

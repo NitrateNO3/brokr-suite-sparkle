@@ -41,7 +41,6 @@ import {
 import { generatePropertyCode, slugify } from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
 
-
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
   property_code: z.string().min(3),
@@ -209,7 +208,6 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const [coverIndex, setCoverIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
 
-
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(schema),
     defaultValues: defaults(property),
@@ -251,7 +249,6 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     if (property || formState.dirtyFields.slug) return;
     setValue("slug", slugify(values.title || ""));
   }, [values.title, property, formState.dirtyFields.slug, setValue]);
-
 
   const onSubmit = handleSubmit(async (data) => {
     const payload = {
@@ -315,14 +312,11 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const pending = create.isPending || update.isPending || uploading;
   const sectorOptions = values.city === "Gurgaon" ? GURGAON_SECTORS : [];
 
-
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="surface flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="text-sm">
-          <p className="font-medium">
-            {property ? property.property_code : values.property_code}
-          </p>
+          <p className="font-medium">{property ? property.property_code : values.property_code}</p>
           <p className="text-xs text-muted-foreground">
             {savedAt ? `Draft auto-saved at ${savedAt}` : "Changes are auto-saved locally"}
           </p>
@@ -482,7 +476,10 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Sector" hint={sectorOptions.length ? undefined : "Sectors apply to Gurgaon"}>
+          <Field
+            label="Sector"
+            hint={sectorOptions.length ? undefined : "Sectors apply to Gurgaon"}
+          >
             <Select
               value={values.sector ?? ""}
               onValueChange={(v) => setValue("sector", v, { shouldDirty: true })}
@@ -713,8 +710,6 @@ export function PropertyForm({ property }: { property?: Property | null }) {
             ))}
           </div>
         </TabsContent>
-
-
 
         <TabsContent value="agent" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
           <Field label="Agent name">

@@ -117,7 +117,13 @@ function AnalyticsPage() {
             <LineChart data={leadTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
               <XAxis dataKey="date" tickLine={false} axisLine={false} fontSize={11} interval={4} />
-              <YAxis tickLine={false} axisLine={false} fontSize={11} width={28} allowDecimals={false} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                fontSize={11}
+                width={28}
+                allowDecimals={false}
+              />
               <Tooltip contentStyle={tooltipStyle} />
               <Line
                 type="monotone"
@@ -137,7 +143,11 @@ function AnalyticsPage() {
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topProperties} layout="vertical" margin={{ left: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  horizontal={false}
+                />
                 <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} />
                 <YAxis
                   type="category"

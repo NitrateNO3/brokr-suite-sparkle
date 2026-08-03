@@ -26,12 +26,36 @@ export const Route = createFileRoute("/")({
 });
 
 const FEATURES = [
-  { icon: Building2, title: "Inventory that stays tidy", body: "Auto-generated property codes, slugs and duplicate-in-one-click drafts." },
-  { icon: Images, title: "Media without the mess", body: "Bulk uploads with client-side compression and reorderable galleries." },
-  { icon: Share2, title: "Shareable listing pages", body: "Every published property gets an SEO-ready page with WhatsApp and QR sharing." },
-  { icon: Users, title: "Leads in one pipeline", body: "Enquiries land straight in your CRM with status, notes and contact shortcuts." },
-  { icon: BarChart3, title: "Analytics that matter", body: "Views, conversion rate and city-level performance at a glance." },
-  { icon: ShieldCheck, title: "Secure by default", body: "Row-level security keeps drafts private and published pages public." },
+  {
+    icon: Building2,
+    title: "Inventory that stays tidy",
+    body: "Auto-generated property codes, slugs and duplicate-in-one-click drafts.",
+  },
+  {
+    icon: Images,
+    title: "Media without the mess",
+    body: "Bulk uploads with client-side compression and reorderable galleries.",
+  },
+  {
+    icon: Share2,
+    title: "Shareable listing pages",
+    body: "Every published property gets an SEO-ready page with WhatsApp and QR sharing.",
+  },
+  {
+    icon: Users,
+    title: "Leads in one pipeline",
+    body: "Enquiries land straight in your CRM with status, notes and contact shortcuts.",
+  },
+  {
+    icon: BarChart3,
+    title: "Analytics that matter",
+    body: "Views, conversion rate and city-level performance at a glance.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Secure by default",
+    body: "Row-level security keeps drafts private and published pages public.",
+  },
 ];
 
 function Landing() {

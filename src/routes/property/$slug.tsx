@@ -79,9 +79,7 @@ function PublicPropertyPage() {
     void track({ data: { propertyId: property.id } }).catch(() => undefined);
   }, [property.id, track]);
 
-  const images = [...(property.property_images ?? [])].sort(
-    (a, b) => a.sort_order - b.sort_order,
-  );
+  const images = [...(property.property_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const gallery = images.length
     ? images.map((i) => i.url)
     : property.cover_image
@@ -91,7 +89,10 @@ function PublicPropertyPage() {
   const facts = [
     property.bedrooms ? { icon: BedDouble, label: `${property.bedrooms} Beds` } : null,
     property.bathrooms ? { icon: Bath, label: `${property.bathrooms} Baths` } : null,
-    property.area ? { icon: Ruler, label: `${formatNumber(property.area)} ${property.area_unit}` } : null,
+    (() => {
+      const size = property.super_area ?? property.builtup_area ?? property.carpet_area;
+      return size ? { icon: Ruler, label: `${formatNumber(size)} ${property.area_unit}` } : null;
+    })(),
     property.facing ? { icon: Compass, label: labelFor(FACINGS, property.facing) } : null,
     property.furnishing
       ? { icon: Building2, label: labelFor(FURNISHINGS, property.furnishing) }
@@ -149,7 +150,6 @@ function PublicPropertyPage() {
             <p className="display-title mt-4 text-3xl text-primary">
               {property.price ? formatPrice(Number(property.price)) : "Price on request"}
             </p>
-
 
             <div className="mt-6 flex flex-wrap gap-3">
               {facts.map((fact) => (
@@ -262,7 +262,12 @@ function PublicPropertyPage() {
         </div>
       </main>
 
-      <ShareDialog open={share} onOpenChange={setShare} slug={property.slug} title={property.title} />
+      <ShareDialog
+        open={share}
+        onOpenChange={setShare}
+        slug={property.slug}
+        title={property.title}
+      />
     </div>
   );
 }
