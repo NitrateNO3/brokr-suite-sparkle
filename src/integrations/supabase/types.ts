@@ -615,7 +615,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_published_property: { Args: { p_slug: string }; Returns: Json }
+      list_published_property_slugs: {
+        Args: never
+        Returns: {
+          slug: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "agent"

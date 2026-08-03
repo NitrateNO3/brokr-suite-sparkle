@@ -37,10 +37,11 @@ export const Route = createFileRoute("/sitemap.xml")({
 
         try {
           const supabase = publicClient();
-          const { data } = await supabase
-            .from("properties")
-            .select("slug")
-            .eq("is_published", true);
+          const { data } = await (
+            supabase.rpc as unknown as (
+              fn: string,
+            ) => Promise<{ data: { slug: string }[] | null }>
+          )("list_published_property_slugs");
           for (const row of data ?? []) {
             if (row.slug) {
               entries.push({
