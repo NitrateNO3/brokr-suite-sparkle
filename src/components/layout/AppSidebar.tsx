@@ -10,6 +10,8 @@ import {
   MapPin,
   Sparkles,
   Settings as SettingsIcon,
+  ShieldCheck,
+
   CircleUser,
   LogOut,
 } from "lucide-react";
