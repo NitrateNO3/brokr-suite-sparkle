@@ -89,6 +89,7 @@ const schema = z.object({
   is_premium: z.boolean(),
   is_hot: z.boolean(),
   is_exclusive: z.boolean(),
+  assigned_to: z.string().optional().nullable(),
   agent_name: z.string().optional().nullable(),
   agent_phone: z.string().optional().nullable(),
   agent_whatsapp: z.string().optional().nullable(),
