@@ -179,6 +179,21 @@ export function useLeadsQuery() {
   });
 }
 
+export function useCreateLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: TablesInsert<"leads">) => {
+      const { data, error } = await supabase.from("leads").insert(values).select().single();
+      if (error) throw error;
+      await logActivity("Added lead", "lead", data.id);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["leads"] }),
+  });
+}
+
+
+
 export function useUpdateLead() {
   const qc = useQueryClient();
   return useMutation({
