@@ -32,9 +32,11 @@ type PublicProperty = Database["public"]["Tables"]["properties"]["Row"] & {
 export const getPublicProperty = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }) => {
-    const supabase = publicClient();
+    // Redaction happens inside a SECURITY DEFINER routine that only the trusted
+    // server role may execute, so it is called with the server-side client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: property, error } = await (
-      supabase.rpc as unknown as (
+      supabaseAdmin.rpc as unknown as (
         fn: string,
         args: Record<string, unknown>,
       ) => Promise<{ data: unknown; error: { message: string } | null }>

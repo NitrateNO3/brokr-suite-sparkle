@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
 import type {} from "@tanstack/react-start";
-import type { Database } from "@/integrations/supabase/types";
 
 const BASE_URL = "https://brokr-suite-sparkle.lovable.app";
 
@@ -11,23 +9,7 @@ interface SitemapEntry {
   priority?: string;
 }
 
-function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  const url = process.env["SUPABASE_URL"]!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
-        if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
-          headers.delete("Authorization");
-        }
-        headers.set("apikey", key);
-        return fetch(input, { ...init, headers });
-      },
-    },
-  });
-}
+
 
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
@@ -36,9 +18,9 @@ export const Route = createFileRoute("/sitemap.xml")({
         const entries: SitemapEntry[] = [{ path: "/", changefreq: "weekly", priority: "1.0" }];
 
         try {
-          const supabase = publicClient();
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data } = await (
-            supabase.rpc as unknown as (
+            supabaseAdmin.rpc as unknown as (
               fn: string,
             ) => Promise<{ data: { slug: string }[] | null }>
           )("list_published_property_slugs");
