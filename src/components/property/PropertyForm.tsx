@@ -94,7 +94,24 @@ const schema = z.object({
   agent_whatsapp: z.string().optional().nullable(),
   agent_email: z.string().optional().nullable(),
   agent_office: z.string().optional().nullable(),
+  share_show_price: z.boolean(),
+  share_show_address: z.boolean(),
+  share_show_location: z.boolean(),
+  share_show_contact: z.boolean(),
+  share_show_description: z.boolean(),
+  share_show_amenities: z.boolean(),
+  share_show_specs: z.boolean(),
 });
+
+export const SHARE_FIELDS = [
+  { key: "share_show_price", label: "Price", hint: "Hide to share without any pricing" },
+  { key: "share_show_location", label: "City & sector", hint: "Broad location line" },
+  { key: "share_show_address", label: "Exact address", hint: "Street address and landmark" },
+  { key: "share_show_specs", label: "Specifications", hint: "Beds, baths, area, facing" },
+  { key: "share_show_description", label: "Description", hint: "About this property" },
+  { key: "share_show_amenities", label: "Amenities", hint: "Amenity chips" },
+  { key: "share_show_contact", label: "Agent contact", hint: "Phone number on the page" },
+] as const;
 
 export type PropertyFormValues = z.infer<typeof schema>;
 
@@ -153,6 +170,13 @@ function defaults(property?: Property | null): PropertyFormValues {
     agent_whatsapp: property?.agent_whatsapp ?? "+91 98110 45678",
     agent_email: property?.agent_email ?? "hello@deeprealestate.in",
     agent_office: property?.agent_office ?? "Sector 48, Sohna Road, Gurgaon",
+    share_show_price: property?.share_show_price ?? true,
+    share_show_address: property?.share_show_address ?? true,
+    share_show_location: property?.share_show_location ?? true,
+    share_show_contact: property?.share_show_contact ?? true,
+    share_show_description: property?.share_show_description ?? true,
+    share_show_amenities: property?.share_show_amenities ?? true,
+    share_show_specs: property?.share_show_specs ?? true,
   };
 }
 
@@ -330,6 +354,8 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           <TabsTrigger value="amenities">Amenities</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="seo">SEO &amp; Flags</TabsTrigger>
+          <TabsTrigger value="sharing">Sharing</TabsTrigger>
+
           <TabsTrigger value="agent">Agent</TabsTrigger>
         </TabsList>
 
@@ -660,6 +686,35 @@ export function PropertyForm({ property }: { property?: Property | null }) {
             ))}
           </div>
         </TabsContent>
+
+        <TabsContent value="sharing" className="surface mt-4 space-y-4 p-5">
+          <div>
+            <p className="display-title text-lg">What clients see on the shared link</p>
+            <p className="text-sm text-muted-foreground">
+              Turn anything off to hide it from the public property page you share. Your internal
+              records always keep the full details.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {SHARE_FIELDS.map((field) => (
+              <label
+                key={field.key}
+                className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
+              >
+                <span>
+                  <span className="text-sm font-medium">{field.label}</span>
+                  <span className="block text-xs text-muted-foreground">{field.hint}</span>
+                </span>
+                <Switch
+                  checked={Boolean(values[field.key])}
+                  onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
+                />
+              </label>
+            ))}
+          </div>
+        </TabsContent>
+
+
 
         <TabsContent value="agent" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
           <Field label="Agent name">

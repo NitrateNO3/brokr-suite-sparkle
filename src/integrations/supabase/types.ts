@@ -232,6 +232,13 @@ export type Database = {
           purpose: Database["public"]["Enums"]["property_purpose"]
           sector: string | null
           security_deposit: number | null
+          share_show_address: boolean
+          share_show_amenities: boolean
+          share_show_contact: boolean
+          share_show_description: boolean
+          share_show_location: boolean
+          share_show_price: boolean
+          share_show_specs: boolean
           slug: string
           status: Database["public"]["Enums"]["property_status"]
           super_area: number | null
@@ -292,6 +299,13 @@ export type Database = {
           purpose?: Database["public"]["Enums"]["property_purpose"]
           sector?: string | null
           security_deposit?: number | null
+          share_show_address?: boolean
+          share_show_amenities?: boolean
+          share_show_contact?: boolean
+          share_show_description?: boolean
+          share_show_location?: boolean
+          share_show_price?: boolean
+          share_show_specs?: boolean
           slug: string
           status?: Database["public"]["Enums"]["property_status"]
           super_area?: number | null
@@ -352,6 +366,13 @@ export type Database = {
           purpose?: Database["public"]["Enums"]["property_purpose"]
           sector?: string | null
           security_deposit?: number | null
+          share_show_address?: boolean
+          share_show_amenities?: boolean
+          share_show_contact?: boolean
+          share_show_description?: boolean
+          share_show_location?: boolean
+          share_show_price?: boolean
+          share_show_specs?: boolean
           slug?: string
           status?: Database["public"]["Enums"]["property_status"]
           super_area?: number | null
