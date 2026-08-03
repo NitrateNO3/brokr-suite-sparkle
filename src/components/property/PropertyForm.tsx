@@ -206,6 +206,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const navigate = useNavigate();
   const create = useCreateProperty();
   const update = useUpdateProperty();
+  const { data: team } = useTeamQuery();
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
