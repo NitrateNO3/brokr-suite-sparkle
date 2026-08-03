@@ -199,6 +199,14 @@ function AddLeadDialog({ team }: { team: { id: string; full_name: string | null;
               </Select>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
+              <Label>Next follow-up</Label>
+              <Input
+                type="datetime-local"
+                value={form.follow_up}
+                onChange={(e) => setForm({ ...form, follow_up: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
               <Label>Notes / requirement</Label>
               <Textarea
                 rows={3}
