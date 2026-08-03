@@ -140,13 +140,16 @@ function PublicPropertyPage() {
               {property.property_code} · For {property.purpose}
             </p>
             <h1 className="display-title mt-2 text-3xl">{property.title}</h1>
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              {[property.address, property.sector, property.city].filter(Boolean).join(", ")}
-            </p>
+            {[property.address, property.sector, property.city].filter(Boolean).length > 0 && (
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                {[property.address, property.sector, property.city].filter(Boolean).join(", ")}
+              </p>
+            )}
             <p className="display-title mt-4 text-3xl text-primary">
-              {formatPrice(Number(property.price))}
+              {property.price ? formatPrice(Number(property.price)) : "Price on request"}
             </p>
+
 
             <div className="mt-6 flex flex-wrap gap-3">
               {facts.map((fact) => (
