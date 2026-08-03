@@ -76,7 +76,9 @@ export type Database = {
           assigned_to: string | null
           created_at: string
           email: string | null
+          follow_up_at: string | null
           id: string
+          last_contacted_at: string | null
           message: string | null
           name: string
           notes: string | null
@@ -91,7 +93,9 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           email?: string | null
+          follow_up_at?: string | null
           id?: string
+          last_contacted_at?: string | null
           message?: string | null
           name: string
           notes?: string | null
@@ -106,7 +110,9 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           email?: string | null
+          follow_up_at?: string | null
           id?: string
+          last_contacted_at?: string | null
           message?: string | null
           name?: string
           notes?: string | null
