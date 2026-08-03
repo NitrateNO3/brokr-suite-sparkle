@@ -77,9 +77,10 @@ function BrochurePage() {
           <div>
             <p className="display-title text-2xl">{settings?.agency_name ?? "Deep Real Estate"}</p>
             <p className="text-xs text-muted-foreground">
-              {settings?.contact_phone ?? property.agent_phone ?? ""}
-              {settings?.contact_email ? ` · ${settings.contact_email}` : ""}
+              {settings?.phone ?? property.agent_phone ?? ""}
+              {settings?.email ? ` · ${settings.email}` : ""}
             </p>
+
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Listing</p>
