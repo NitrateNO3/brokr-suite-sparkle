@@ -41,6 +41,14 @@ import {
 import { useLeadsQuery, useUpdateLead, useDeleteLead, useCreateLead } from "@/lib/queries";
 import { useTeamQuery } from "@/lib/roles";
 import { timeAgo } from "@/lib/format";
+import {
+  FOLLOW_UP_LABEL,
+  FOLLOW_UP_TONE,
+  followUpState,
+  formatFollowUp,
+  fromLocalInput,
+  toLocalInput,
+} from "@/lib/followup";
 import { LEAD_STATUSES } from "@/lib/constants";
 import type { Database } from "@/integrations/supabase/types";
 
