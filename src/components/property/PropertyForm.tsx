@@ -604,10 +604,14 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               onCoverChange={(url: string) => setValue("cover_image", url, { shouldDirty: true })}
             />
           ) : (
-            <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Create the listing first — image, video and document uploads unlock right after.
-            </p>
+            <PendingMediaPicker
+              files={pendingFiles}
+              onChange={setPendingFiles}
+              coverIndex={coverIndex}
+              onCoverIndexChange={setCoverIndex}
+            />
           )}
+
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="YouTube link">
               <Input {...register("youtube_url")} placeholder="https://youtube.com/watch?v=…" />
