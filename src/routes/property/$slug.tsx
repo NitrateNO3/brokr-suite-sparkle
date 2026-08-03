@@ -22,10 +22,13 @@ export const Route = createFileRoute("/property/$slug")({
   head: ({ loaderData }) => {
     const title = loaderData ? `${loaderData.title} — Deep Real Estate` : "Property — BrokrSuite";
     const description = loaderData
-      ? `${labelFor(PROPERTY_TYPES, loaderData.property_type)} in ${locationLine(
-          loaderData.city,
-          loaderData.sector,
-        )} · ${formatPrice(Number(loaderData.price))}`
+      ? [
+          labelFor(PROPERTY_TYPES, loaderData.property_type),
+          loaderData.city ? `in ${locationLine(loaderData.city, loaderData.sector)}` : null,
+          loaderData.price ? formatPrice(Number(loaderData.price)) : "Price on request",
+        ]
+          .filter(Boolean)
+          .join(" · ")
       : "Explore this property listing.";
     const image = loaderData?.cover_image;
     return {
