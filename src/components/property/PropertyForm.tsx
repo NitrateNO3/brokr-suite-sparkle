@@ -22,6 +22,9 @@ import {
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { RichTextEditor } from "@/components/property/RichTextEditor";
 import { MediaManager } from "@/components/property/MediaManager";
+import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
+import { supabase } from "@/integrations/supabase/client";
+import { uploadToStorage } from "@/lib/storage";
 import {
   AMENITY_LIST,
   AREA_UNITS,
@@ -37,6 +40,7 @@ import {
 } from "@/lib/constants";
 import { generatePropertyCode, slugify } from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
+
 
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
