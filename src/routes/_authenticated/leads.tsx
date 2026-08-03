@@ -362,6 +362,44 @@ function LeadsPage() {
               />
 
               <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <UserRound className="h-3.5 w-3.5" /> {nameOf(lead.assigned_to)}
+                </span>
+                <Select
+                  value={lead.assigned_to ?? UNASSIGNED}
+                  onValueChange={(value) =>
+                    update.mutate(
+                      {
+                        id: lead.id,
+                        values: { assigned_to: value === UNASSIGNED ? null : value },
+                      },
+                      {
+                        onSuccess: () =>
+                          toast.success(
+                            value === UNASSIGNED
+                              ? "Lead unassigned"
+                              : `Assigned to ${nameOf(value)}`,
+                          ),
+                      },
+                    )
+                  }
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Assign to teammate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.full_name ?? member.email ?? "Teammate"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+
+              <div className="flex items-center gap-2">
                 <Select
                   value={lead.status}
                   onValueChange={(value) =>
