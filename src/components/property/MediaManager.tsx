@@ -135,7 +135,7 @@ export function MediaManager({
             >
               <img
                 src={image.url}
-                alt={image.alt ?? "Property"}
+                alt={image.alt ?? "Property listing photo"}
                 loading="lazy"
                 className="aspect-4/3 w-full object-cover"
               />
