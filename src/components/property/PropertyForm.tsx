@@ -732,6 +732,29 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           <Field label="Office address">
             <Input {...register("agent_office")} />
           </Field>
+          <Field
+            label="Assigned teammate"
+            hint="The team member responsible for this listing."
+          >
+            <Select
+              value={values.assigned_to || "unassigned"}
+              onValueChange={(v) =>
+                setValue("assigned_to", v === "unassigned" ? "" : v, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {(team ?? []).map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.full_name ?? member.email ?? "Teammate"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         </TabsContent>
       </Tabs>
     </form>
