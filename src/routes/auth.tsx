@@ -132,9 +132,10 @@ function AuthPage() {
             <p className="display-title text-xl">BrokrSuite</p>
           </div>
 
-          <h2 className="display-title text-2xl">
-            {mode === "signin" ? "Sign in to your portal" : "Create your account"}
-          </h2>
+          <h1 className="display-title text-2xl">
+            {mode === "signin" ? "Sign in to your agency portal" : "Create your account"}
+          </h1>
+
           <p className="mt-1 text-sm text-muted-foreground">Deep Real Estate agency workspace.</p>
 
           <form
