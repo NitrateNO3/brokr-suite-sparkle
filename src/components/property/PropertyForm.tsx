@@ -259,6 +259,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       slug: data.slug || slugify(data.title),
       meta_title: data.meta_title || data.title,
       sector: data.sector || null,
+      assigned_to: data.assigned_to || null,
       facing: (data.facing || null) as never,
       age: (data.age || null) as never,
       furnishing: (data.furnishing || null) as never,
