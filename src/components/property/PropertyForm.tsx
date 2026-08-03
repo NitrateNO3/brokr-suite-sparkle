@@ -226,6 +226,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     const payload = {
       ...data,
       slug: data.slug || slugify(data.title),
+      meta_title: data.meta_title || data.title,
       sector: data.sector || null,
       facing: (data.facing || null) as never,
       age: (data.age || null) as never,
@@ -241,6 +242,36 @@ export function PropertyForm({ property }: { property?: Property | null }) {
         toast.success("Listing updated");
       } else {
         const created = await create.mutateAsync(payload as never);
+
+        // Upload any images staged before the listing existed.
+        if (pendingFiles.length) {
+          setUploading(true);
+          let cover: string | null = null;
+          try {
+            for (let i = 0; i < pendingFiles.length; i += 1) {
+              const url = await uploadToStorage(pendingFiles[i]!, created.id);
+              await supabase.from("property_images").insert({
+                property_id: created.id,
+                url,
+                sort_order: i,
+                is_featured: i === coverIndex,
+              });
+              if (i === coverIndex) cover = url;
+            }
+            if (cover) {
+              await supabase.from("properties").update({ cover_image: cover }).eq("id", created.id);
+            }
+            toast.success(`${pendingFiles.length} file(s) uploaded`);
+          } catch (uploadError) {
+            toast.error(
+              uploadError instanceof Error ? uploadError.message : "Some media failed to upload",
+            );
+          } finally {
+            setUploading(false);
+            setPendingFiles([]);
+          }
+        }
+
         localStorage.removeItem(DRAFT_KEY);
         toast.success("Listing created");
         navigate({ to: "/properties/$id/edit", params: { id: created.id } });
@@ -250,8 +281,9 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     }
   });
 
-  const pending = create.isPending || update.isPending;
+  const pending = create.isPending || update.isPending || uploading;
   const sectorOptions = values.city === "Gurgaon" ? GURGAON_SECTORS : [];
+
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
