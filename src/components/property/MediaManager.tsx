@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
 import { usePropertyImagesQuery } from "@/lib/queries";
+import { NativeMediaSourceButtons } from "@/components/property/NativeMediaSourceButtons";
+import { friendlyError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
 /** Bulk image upload with drag & drop, reordering, delete and featured selection. */
@@ -28,13 +30,14 @@ export function MediaManager({
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["property-images", propertyId] });
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files?.length) return;
+  const handleFiles = async (files: FileList | File[] | null) => {
+    const list = files ? Array.from(files as ArrayLike<File>) : [];
+    if (!list.length) return;
     setUploading(true);
     try {
       const start = images?.length ?? 0;
       let index = 0;
-      for (const file of Array.from(files)) {
+      for (const file of list) {
         const url = await uploadToStorage(file, propertyId);
         await supabase.from("property_images").insert({
           property_id: propertyId,
@@ -44,10 +47,10 @@ export function MediaManager({
         if (start === 0 && index === 0) onCoverChange(url);
         index += 1;
       }
-      toast.success(`${files.length} file(s) uploaded`);
+      toast.success(`${list.length} file(s) uploaded`);
       refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+      toast.error(friendlyError(error, "Upload failed"));
     } finally {
       setUploading(false);
     }
@@ -84,6 +87,7 @@ export function MediaManager({
 
   return (
     <div className="space-y-4">
+      <NativeMediaSourceButtons onFiles={(picked) => void handleFiles(picked)} />
       <div
         onDragOver={(e) => {
           e.preventDefault();
