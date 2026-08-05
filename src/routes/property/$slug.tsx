@@ -3,7 +3,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Building2, MapPin, BedDouble, Bath, Ruler, Compass, Share2, Phone } from "lucide-react";
+import { Building2, MapPin, BedDouble, Bath, Ruler, Compass, Share2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

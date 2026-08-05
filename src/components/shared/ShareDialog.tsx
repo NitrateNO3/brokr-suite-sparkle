@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Copy, Mail, MessageCircle, ExternalLink, Check } from "lucide-react";
+import { Copy, Mail, MessageCircle, ExternalLink, Check, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isNativeApp, openWithSystemApp, shareNative, whatsappUrl } from "@/lib/native";
 
 export function ShareDialog({
   open,
@@ -51,27 +52,34 @@ export function ShareDialog({
           </Button>
         </div>
 
+        {isNativeApp() && (
+          <Button
+            variant="secondary"
+            onClick={() => void shareNative({ title, text: `${title} — ${url}`, url })}
+          >
+            <Share2 className="h-4 w-4" /> Share via…
+          </Button>
+        )}
+
         <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" asChild>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`${title} — ${url}`)}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <MessageCircle className="h-4 w-4" /> WhatsApp
-            </a>
+          <Button
+            variant="outline"
+            onClick={() => void openWithSystemApp(whatsappUrl(`${title} — ${url}`))}
+          >
+            <MessageCircle className="h-4 w-4" /> WhatsApp
           </Button>
-          <Button variant="outline" asChild>
-            <a
-              href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`}
-            >
-              <Mail className="h-4 w-4" /> Email
-            </a>
+          <Button
+            variant="outline"
+            onClick={() =>
+              void openWithSystemApp(
+                `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`,
+              )
+            }
+          >
+            <Mail className="h-4 w-4" /> Email
           </Button>
-          <Button variant="outline" asChild>
-            <a href={url} target="_blank" rel="noreferrer">
-              <ExternalLink className="h-4 w-4" /> Open
-            </a>
+          <Button variant="outline" onClick={() => void openWithSystemApp(url)}>
+            <ExternalLink className="h-4 w-4" /> Open
           </Button>
         </div>
 
