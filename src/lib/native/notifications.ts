@@ -1,11 +1,19 @@
-import { isNativeApp } from "./index";
-
 /**
- * Firebase Cloud Messaging scaffolding.
+ * Push notification routing helpers — INERT BUILD.
  *
- * The plugin is wired and permission-aware, but no notifications are sent yet.
- * Drop the Firebase `google-services.json` into `android/app/` and start
- * emitting messages with these `type` values from your backend.
+ * Firebase is not configured for this project, so the Capacitor
+ * `@capacitor/push-notifications` plugin is intentionally NOT installed and NOT
+ * imported anywhere. Touching it without `google-services.json` throws
+ * `java.lang.IllegalStateException: Default FirebaseApp is not initialized`
+ * inside `PushNotificationsPlugin.register()` and crashes Android at launch.
+ *
+ * This module therefore contains ZERO plugin imports and no runtime calls to
+ * `register()`, `requestPermissions()` or `addListener()`. Only the pure
+ * payload/route mapping used by the rest of the app survives, so re-enabling
+ * push later is a matter of:
+ *   1. adding `android/app/google-services.json`
+ *   2. `npm i @capacitor/push-notifications && npx cap sync`
+ *   3. re-adding a registration function here, guarded by `isPushEnabled()`
  */
 export type BrokrNotificationType =
   | "new_lead"
@@ -37,62 +45,17 @@ export function routeForNotification(payload: Partial<BrokrNotification>): strin
   }
 }
 
-type RegisterOptions = {
-  onToken?: (token: string) => void;
-  onNotification?: (payload: Partial<BrokrNotification>) => void;
-  onOpen?: (payload: Partial<BrokrNotification>) => void;
-};
-
 /**
- * Push notifications stay completely dormant until Firebase is configured.
- *
- * Without `google-services.json` the native plugin throws
- * `Default FirebaseApp is not initialized` the moment it is touched, which
- * crashes the Android app at launch. So we only load the plugin when the build
- * explicitly opts in via `VITE_ENABLE_PUSH=true` (set it after adding
- * `google-services.json` to `android/app/`).
+ * Always `false` in this build: Firebase is not configured and the plugin is
+ * not installed. Kept so callers can stay written defensively.
  */
 export function isPushEnabled(): boolean {
-  return import.meta.env["VITE_ENABLE_PUSH"] === "true";
+  return false;
 }
 
 /**
- * Registers for push notifications. No-op on web and no-op whenever Firebase
- * has not been configured — the plugin module is never even imported then.
+ * No-op. Deliberately never touches the native plugin.
  */
-export async function registerPushNotifications(options: RegisterOptions = {}) {
-  if (!isNativeApp() || !isPushEnabled()) return () => {};
-  try {
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-
-    let status = await PushNotifications.checkPermissions();
-    if (status.receive === "prompt" || status.receive === "prompt-with-rationale") {
-      status = await PushNotifications.requestPermissions();
-    }
-    if (status.receive !== "granted") return () => {};
-
-    await PushNotifications.register();
-
-    const listeners = await Promise.all([
-      PushNotifications.addListener("registration", (token) => options.onToken?.(token.value)),
-      PushNotifications.addListener("registrationError", (error) =>
-        console.warn("[push] registration failed", error),
-      ),
-      PushNotifications.addListener("pushNotificationReceived", (notification) =>
-        options.onNotification?.({
-          title: notification.title ?? "",
-          body: notification.body ?? "",
-          ...(notification.data as Partial<BrokrNotification>),
-        }),
-      ),
-      PushNotifications.addListener("pushNotificationActionPerformed", (action) =>
-        options.onOpen?.(action.notification.data as Partial<BrokrNotification>),
-      ),
-    ]);
-
-    return () => listeners.forEach((listener) => void listener.remove());
-  } catch (error) {
-    console.warn("[push] unavailable", error);
-    return () => {};
-  }
+export async function registerPushNotifications(): Promise<() => void> {
+  return () => {};
 }

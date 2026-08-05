@@ -6,7 +6,7 @@ import { CloudUpload, Loader2, WifiOff } from "lucide-react";
 
 import { isNativeApp } from "@/lib/native";
 import { useOnlineStatus } from "@/lib/native/network";
-import { isPushEnabled, registerPushNotifications, routeForNotification } from "@/lib/native/notifications";
+
 import { useOfflineDrafts } from "@/lib/offline-drafts";
 
 /**
@@ -61,25 +61,11 @@ export function NativeBootstrap() {
     };
   }, []);
 
-  // Push notifications — disabled until Firebase (google-services.json) is set
-  // up and VITE_ENABLE_PUSH=true. Touching the plugin without Firebase crashes
-  // the Android app with "Default FirebaseApp is not initialized".
-  useEffect(() => {
-    if (!isNativeApp() || !isPushEnabled()) return;
-    let unsubscribe: (() => void) | undefined;
-    void registerPushNotifications({
-      onNotification: (payload) => {
-        if (payload.title) toast(payload.title, { description: payload.body });
-        void queryClient.invalidateQueries();
-      },
-      onOpen: (payload) => {
-        void navigate({ to: routeForNotification(payload) });
-      },
-    }).then((dispose) => {
-      unsubscribe = dispose;
-    });
-    return () => unsubscribe?.();
-  }, [navigate, queryClient]);
+  // Push notifications are intentionally NOT initialized. Firebase is not
+  // configured (no google-services.json), and calling into the Capacitor push
+  // plugin throws "Default FirebaseApp is not initialized" and crashes Android
+  // on launch. No register(), requestPermissions() or listeners run here — the
+  // plugin is not even installed. See src/lib/native/notifications.ts.
 
   // Flush queued drafts whenever connectivity returns.
   useEffect(() => {
