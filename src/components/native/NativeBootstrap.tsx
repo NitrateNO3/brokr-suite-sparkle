@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CloudUpload, Loader2, WifiOff } from "lucide-react";
 
 import { isNativeApp } from "@/lib/native";
 import { useOnlineStatus } from "@/lib/native/network";
-
 import { useOfflineDrafts } from "@/lib/offline-drafts";
 
 /**
- * Native shell glue: status bar, hardware back button, push registration and
- * the offline/sync banner. Renders nothing on the web build except the banner
- * when the browser goes offline.
+ * Native shell glue: status bar, hardware back button and the offline/sync
+ * banner. Push notifications are deliberately excluded (no Firebase).
  */
 export function NativeBootstrap() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const online = useOnlineStatus();
   const { count, syncing, sync } = useOfflineDrafts();

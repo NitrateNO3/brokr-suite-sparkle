@@ -6,7 +6,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * The app is a TanStack Start SSR application, so the native shell loads the
  * deployed site (`server.url`) instead of a bundled static build. The Capacitor
  * bridge is still injected into that origin, so every native plugin (camera,
- * share, push, filesystem, network) works exactly as it would in a bundled app.
+ * share, filesystem, network) works exactly as it would in a bundled app.
  *
  * `webDir` points at a tiny offline fallback document that is shown only when
  * the remote origin cannot be reached at all.
@@ -46,9 +46,6 @@ const config: CapacitorConfig = {
       backgroundColor: "#0B1220",
       androidSplashResourceName: "splash",
       showSpinner: false,
-    },
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"],
     },
     CapacitorHttp: {
       enabled: false,
