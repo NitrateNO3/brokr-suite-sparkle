@@ -8,6 +8,7 @@ import { Building2, MapPin, BedDouble, Bath, Ruler, Compass, Share2, Phone } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ContactActions } from "@/components/shared/ContactActions";
 import { ShareDialog } from "@/components/shared/ShareDialog";
 import { getPublicProperty, recordPropertyView, submitLead } from "@/lib/public-property.functions";
 import { formatPrice, formatNumber, locationLine } from "@/lib/format";
@@ -249,14 +250,16 @@ function PublicPropertyPage() {
                   Send enquiry
                 </Button>
               </form>
-              {property.agent_phone && (
-                <a
-                  href={`tel:${property.agent_phone}`}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-border py-2 text-sm"
-                >
-                  <Phone className="h-4 w-4" /> {property.agent_phone}
-                </a>
-              )}
+              <ContactActions
+                phone={property.agent_phone}
+                whatsapp={property.agent_whatsapp}
+                email={property.agent_email}
+                title={property.title}
+                latitude={property.latitude}
+                longitude={property.longitude}
+                address={property.address}
+                mapsLink={property.maps_url}
+              />
             </div>
           </aside>
         </div>
