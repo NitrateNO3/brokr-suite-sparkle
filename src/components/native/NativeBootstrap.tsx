@@ -61,9 +61,11 @@ export function NativeBootstrap() {
     };
   }, []);
 
-  // Push notifications (Firebase Cloud Messaging).
+  // Push notifications — disabled until Firebase (google-services.json) is set
+  // up and VITE_ENABLE_PUSH=true. Touching the plugin without Firebase crashes
+  // the Android app with "Default FirebaseApp is not initialized".
   useEffect(() => {
-    if (!isNativeApp()) return;
+    if (!isNativeApp() || !isPushEnabled()) return;
     let unsubscribe: (() => void) | undefined;
     void registerPushNotifications({
       onNotification: (payload) => {
