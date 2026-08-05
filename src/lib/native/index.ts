@@ -79,23 +79,41 @@ export async function openExternal(url: string) {
 /**
  * Opens a URL through the OS so Android can hand it to a matching app
  * (WhatsApp, Google Maps, dialer, mail client) before falling back to a browser.
+ *
+ * Custom schemes (`tel:`, `mailto:`, `whatsapp:`, `geo:`) must go through a
+ * plain navigation — the Android WebView turns them into an implicit intent and
+ * the matching app takes over. `https:` links that are not in
+ * `server.allowNavigation` are handed to the system the same way, which is what
+ * lets `wa.me` and `google.com/maps` open WhatsApp and Google Maps directly.
  */
 export async function openWithSystemApp(url: string) {
-  if (isNativeApp()) {
-    try {
-      const { AppLauncher } = (await import("@capacitor/app")) as unknown as {
-        AppLauncher?: { openUrl: (o: { url: string }) => Promise<unknown> };
-      };
-      if (AppLauncher) {
-        await AppLauncher.openUrl({ url });
-        return;
-      }
-    } catch {
-      /* fall through */
-    }
+  const isHttp = /^https?:/i.test(url);
+  if (typeof window === "undefined") return;
+  if (isNativeApp() || !isHttp) {
+    window.location.href = url;
+    return;
   }
-  if (typeof window !== "undefined") window.location.href = url;
+  await openExternal(url);
 }
+
+/** Device metadata (model, OS version, platform) — `null` on the web build. */
+export async function deviceInfo() {
+  if (!isNativeApp()) return null;
+  try {
+    const { Device } = await import("@capacitor/device");
+    return await Device.getInfo();
+  } catch {
+    return null;
+  }
+}
+
+/** True on Android 13+ (API 33), where the granular media permissions apply. */
+export async function isAndroid13OrNewer() {
+  const info = await deviceInfo();
+  if (!info || info.platform !== "android") return false;
+  return Number.parseInt(info.osVersion, 10) >= 13;
+}
+
 
 export function whatsappUrl(text: string, phone?: string | null) {
   const encoded = encodeURIComponent(text);

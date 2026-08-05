@@ -9,6 +9,7 @@ and any property added on either platform appears instantly on the other.
 - **App name:** BrokrSuite
 - **Version:** 1.0.0
 - **Config:** `capacitor.config.ts`
+- **Environment template:** `.env.example` (copy to `.env`)
 - **Offline fallback document:** `capacitor/www/index.html`
 
 ## 1. Generate the native project (once, on your machine)
@@ -17,9 +18,9 @@ The Android SDK is required, so this step runs locally — not in Lovable.
 
 ```bash
 npm install
-npx cap add android
-npm run cap:sync
-npx cap open android      # opens Android Studio
+npm run android:add       # npx cap add android
+npm run android:sync      # npx cap sync
+npm run android:open      # opens Android Studio
 ```
 
 `android/` is created by Capacitor and can be committed or regenerated at will.
@@ -30,7 +31,7 @@ npx cap open android      # opens Android Studio
 Lovable URL. For a Vercel deployment:
 
 ```bash
-CAP_SERVER_URL=https://your-domain.com npm run cap:sync
+CAP_SERVER_URL=https://your-domain.com npm run android:sync
 ```
 
 Add the host to `server.allowNavigation` in `capacitor.config.ts` too.
@@ -76,7 +77,7 @@ To let WhatsApp / Maps / dialer / mail intents resolve on Android 11+, add:
 Debug:
 
 ```bash
-npm run android:build:debug
+npm run android:debug
 # android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -91,7 +92,7 @@ export ANDROID_KEYSTORE_PATH=/absolute/path/brokrsuite.keystore
 export ANDROID_KEYSTORE_PASSWORD=...
 export ANDROID_KEYSTORE_ALIAS=brokrsuite
 export ANDROID_KEYSTORE_ALIAS_PASSWORD=...
-npm run android:build:release
+npm run android:release
 ```
 
 Or wire the same values into `android/app/build.gradle`:
@@ -150,6 +151,17 @@ The plugin and service layer are already wired in
 | Status bar, back button, push wiring, offline banner | `src/components/native/NativeBootstrap.tsx` |
 | Image compression → WebP + thumbnails | `src/lib/storage.ts` |
 | Friendly error messages | `src/lib/errors.ts` |
+| Device model / Android version | `src/lib/native/index.ts` (`deviceInfo`) |
+
+## 6b. npm scripts
+
+| Script | Does |
+| --- | --- |
+| `npm run android:add` | Generates the `android/` native project |
+| `npm run android:sync` | Copies web config + plugins into `android/` |
+| `npm run android:open` | Opens the project in Android Studio |
+| `npm run android:debug` | Sync + `./gradlew assembleDebug` |
+| `npm run android:release` | Sync + `./gradlew assembleRelease` (needs keystore env vars) |
 
 Every helper degrades gracefully on the web build, so the website is unchanged.
 
