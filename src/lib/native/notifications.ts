@@ -44,11 +44,24 @@ type RegisterOptions = {
 };
 
 /**
- * Registers for push notifications. Safe to call on web (no-op) and safe to
- * call before Firebase is configured — it fails quietly.
+ * Push notifications stay completely dormant until Firebase is configured.
+ *
+ * Without `google-services.json` the native plugin throws
+ * `Default FirebaseApp is not initialized` the moment it is touched, which
+ * crashes the Android app at launch. So we only load the plugin when the build
+ * explicitly opts in via `VITE_ENABLE_PUSH=true` (set it after adding
+ * `google-services.json` to `android/app/`).
+ */
+export function isPushEnabled(): boolean {
+  return import.meta.env["VITE_ENABLE_PUSH"] === "true";
+}
+
+/**
+ * Registers for push notifications. No-op on web and no-op whenever Firebase
+ * has not been configured — the plugin module is never even imported then.
  */
 export async function registerPushNotifications(options: RegisterOptions = {}) {
-  if (!isNativeApp()) return () => {};
+  if (!isNativeApp() || !isPushEnabled()) return () => {};
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
