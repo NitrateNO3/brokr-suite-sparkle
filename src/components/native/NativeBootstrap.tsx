@@ -6,7 +6,7 @@ import { CloudUpload, Loader2, WifiOff } from "lucide-react";
 
 import { isNativeApp } from "@/lib/native";
 import { useOnlineStatus } from "@/lib/native/network";
-import { registerPushNotifications, routeForNotification } from "@/lib/native/notifications";
+import { isPushEnabled, registerPushNotifications, routeForNotification } from "@/lib/native/notifications";
 import { useOfflineDrafts } from "@/lib/offline-drafts";
 
 /**
