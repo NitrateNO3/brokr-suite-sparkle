@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Star, Trash2, UploadCloud } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NativeMediaSourceButtons } from "@/components/property/NativeMediaSourceButtons";
 import { cn } from "@/lib/utils";
 
 /** Stages images locally (before the listing exists) so they can be uploaded on create. */
@@ -35,6 +36,7 @@ export function PendingMediaPicker({
 
   return (
     <div className="space-y-4">
+      <NativeMediaSourceButtons onFiles={(picked) => onChange([...files, ...picked])} />
       <div
         onDragOver={(e) => {
           e.preventDefault();

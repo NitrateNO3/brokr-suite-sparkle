@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { NativeBootstrap } from "@/components/native/NativeBootstrap";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -78,7 +79,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
+      },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "theme-color", content: "#0B1220" },
       { title: "BrokrSuite — Real Estate CRM & Listing Platform" },
       {
         name: "description",
@@ -143,6 +149,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <NativeBootstrap />
       <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   );

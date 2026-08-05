@@ -25,6 +25,9 @@ import { MediaManager } from "@/components/property/MediaManager";
 import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
+import { friendlyError } from "@/lib/errors";
+import { isConnected } from "@/lib/native/network";
+import { saveDraft } from "@/lib/offline-drafts";
 import {
   AMENITY_LIST,
   AREA_UNITS,
@@ -269,6 +272,13 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       status: data.status as never,
       area_unit: data.area_unit as never,
     };
+    // Offline: queue the listing locally and sync it when connectivity returns.
+    if (!(await isConnected())) {
+      await saveDraft({ propertyId: property?.id ?? null, values: payload as never });
+      toast.success("Saved offline — this listing syncs automatically once you're back online");
+      return;
+    }
+
     try {
       if (property) {
         await update.mutateAsync({ id: property.id, values: payload as never });
@@ -296,9 +306,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
             }
             toast.success(`${pendingFiles.length} file(s) uploaded`);
           } catch (uploadError) {
-            toast.error(
-              uploadError instanceof Error ? uploadError.message : "Some media failed to upload",
-            );
+            toast.error(friendlyError(uploadError, "Some media failed to upload"));
           } finally {
             setUploading(false);
             setPendingFiles([]);
@@ -310,7 +318,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
         navigate({ to: "/properties/$id/edit", params: { id: created.id } });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save the listing");
+      toast.error(friendlyError(error, "Could not save the listing"));
     }
   });
 

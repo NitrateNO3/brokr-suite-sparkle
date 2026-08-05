@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { isNativeApp, openExternal } from "@/lib/native";
 import { ArrowLeft, Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,14 @@ function BrochurePage() {
             <ArrowLeft className="h-4 w-4" /> Back to listing
           </Link>
         </Button>
-        <Button onClick={() => window.print()}>
+        <Button
+          onClick={() => {
+            // The Android webview has no print dialog — hand the page to Chrome,
+            // which can print or save it as a PDF.
+            if (isNativeApp()) void openExternal(window.location.href);
+            else window.print();
+          }}
+        >
           <Printer className="h-4 w-4" /> Print / Save as PDF
         </Button>
       </div>
