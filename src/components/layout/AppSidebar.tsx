@@ -62,19 +62,35 @@ export function AppSidebar() {
 
   const renderGroup = (label: string, items: typeof workspace) => (
     <SidebarGroup>
-      {!collapsed && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+      {!collapsed && <SidebarGroupLabel className="eyebrow">{label}</SidebarGroupLabel>}
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.url}>
-              <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                <Link to={item.url} className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{item.title}</span>}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            const active = isActive(item.url);
+            return (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                  <Link
+                    to={item.url}
+                    className="group relative flex items-center gap-3 transition-colors"
+                  >
+                    <span
+                      aria-hidden
+                      className={`absolute -left-2 h-5 w-1 rounded-full bg-sidebar-primary transition-all duration-300 ${
+                        active ? "opacity-100" : "scale-y-0 opacity-0"
+                      }`}
+                    />
+                    <item.icon
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                        active ? "text-sidebar-primary" : ""
+                      }`}
+                    />
+                    {!collapsed && <span className="truncate">{item.title}</span>}
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
@@ -84,17 +100,20 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/dashboard" className="flex items-center gap-2.5 px-2 py-3">
-          <span className="brand-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-primary-foreground">
+          <span className="brand-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-primary-foreground shadow-[var(--shadow-soft)]">
             <Building2 className="h-4.5 w-4.5" />
           </span>
           {!collapsed && (
-            <span className="leading-tight">
-              <span className="display-title block text-base">BrokrSuite</span>
-              <span className="block text-[11px] text-muted-foreground">Deep Real Estate</span>
+            <span className="min-w-0 leading-tight">
+              <span className="display-title block truncate text-base">BrokrSuite</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                Deep Real Estate
+              </span>
             </span>
           )}
         </Link>
       </SidebarHeader>
+
 
       <SidebarContent>
         {renderGroup("Workspace", workspace)}
