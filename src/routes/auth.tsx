@@ -159,16 +159,25 @@ function AuthPage() {
           </div>
 
           <h1 className="display-title text-2xl">
-            {mode === "signin" ? "Sign in to your agency portal" : "Create your account"}
+            {mode === "signin"
+              ? "Sign in to your agency portal"
+              : mode === "signup"
+                ? "Create your account"
+                : "Reset your password"}
           </h1>
 
-          <p className="mt-1 text-sm text-muted-foreground">Deep Real Estate agency workspace.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {mode === "forgot"
+              ? "We'll email you a secure link to choose a new password."
+              : "Deep Real Estate agency workspace."}
+          </p>
 
           <form
             className="mt-8 space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
-              authenticate(email, password);
+              if (mode === "forgot") void sendReset(email);
+              else void authenticate(email, password);
             }}
           >
             <div className="space-y-1.5">
@@ -187,40 +196,68 @@ function AuthPage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  className="pl-9"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+            {mode !== "forgot" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    className="pl-9"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {mode === "signin" && (
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 text-muted-foreground">
+                  <Checkbox
+                    checked={remember}
+                    onCheckedChange={(v) => setRemember(v === true)}
+                    aria-label="Remember my email"
+                  />
+                  Remember me
+                </label>
+                <button
+                  type="button"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  onClick={() => setMode("forgot")}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={busy}>
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
+              {mode === "signin"
+                ? "Sign in"
+                : mode === "signup"
+                  ? "Create account"
+                  : "Send reset link"}
             </Button>
 
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              disabled={busy}
-              onClick={() => {
-                setEmail(DEMO_EMAIL);
-                setPassword(DEMO_PASSWORD);
-                authenticate(DEMO_EMAIL, DEMO_PASSWORD);
-              }}
-            >
-              <Sparkles className="h-4 w-4" /> Use demo account
-            </Button>
+            {mode !== "forgot" && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                disabled={busy}
+                onClick={() => {
+                  setEmail(DEMO_EMAIL);
+                  setPassword(DEMO_PASSWORD);
+                  void authenticate(DEMO_EMAIL, DEMO_PASSWORD);
+                }}
+              >
+                <Sparkles className="h-4 w-4" /> Use demo account
+              </Button>
+            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
@@ -233,6 +270,7 @@ function AuthPage() {
               {mode === "signin" ? "Create an account" : "Sign in"}
             </button>
           </p>
+
 
           <div className="mt-8 rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">
             <p className="font-medium text-foreground">Demo credentials</p>
