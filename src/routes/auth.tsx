@@ -44,7 +44,8 @@ function AuthPage() {
   const destination = next ?? "/dashboard";
   const [email, setEmail] = useState(DEMO_EMAIL);
   const [password, setPassword] = useState(DEMO_PASSWORD);
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -52,6 +53,28 @@ function AuthPage() {
       if (data.session) navigate({ to: destination, replace: true });
     });
   }, [navigate, destination]);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("brokrsuite.remembered-email");
+    if (saved) setEmail(saved);
+  }, []);
+
+  /** Emails a recovery link that lands on /reset-password. */
+  const sendReset = async (mail: string) => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(mail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Reset link sent — check your inbox");
+      setMode("signin");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send the reset link");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   /** Signs in, and provisions the account on first use so the demo login always works. */
   const authenticate = async (mail: string, pass: string) => {
@@ -76,6 +99,8 @@ function AuthPage() {
         ({ error } = await supabase.auth.signInWithPassword({ email: mail, password: pass }));
       }
       if (error) throw error;
+      if (remember) window.localStorage.setItem("brokrsuite.remembered-email", mail);
+      else window.localStorage.removeItem("brokrsuite.remembered-email");
       toast.success("Welcome back to BrokrSuite");
       navigate({ to: destination, replace: true });
     } catch (error) {
@@ -84,6 +109,7 @@ function AuthPage() {
       setBusy(false);
     }
   };
+
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
