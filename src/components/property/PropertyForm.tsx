@@ -453,7 +453,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   );
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6">
       <div className="surface space-y-3 p-4">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
@@ -976,7 +976,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       )}
 
       {/* Sticky wizard navigation */}
-      <div className="glass fixed inset-x-0 bottom-0 z-30 border-t px-4 py-3">
+      <div className="glass sticky bottom-0 z-30 -mx-4 border-t px-4 py-3 md:-mx-6 md:px-6">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={back} disabled={step === 0}>
             <ArrowLeft className="h-4 w-4" /> Previous
