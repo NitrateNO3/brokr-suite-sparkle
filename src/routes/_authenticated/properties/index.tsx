@@ -461,11 +461,14 @@ function PropertiesPage() {
                 {formatPrice(Number(property.price))}
               </p>
 
-              <div className="flex flex-wrap items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={property.is_featured ? "Remove from featured" : "Mark as featured"}
+              <div
+                className="flex flex-wrap items-center gap-1.5"
+                role="group"
+                aria-label={`Actions for ${property.title}`}
+              >
+                <IconAction
+                  label={property.is_featured ? "Remove from Favorites" : "Add to Favorites"}
+                  active={property.is_featured}
                   onClick={() =>
                     update.mutate(
                       { id: property.id, values: { is_featured: !property.is_featured } },
@@ -479,11 +482,9 @@ function PropertiesPage() {
                   <Star
                     className={`h-4 w-4 ${property.is_featured ? "fill-brass text-brass" : ""}`}
                   />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={property.is_published ? "Unpublish" : "Publish"}
+                </IconAction>
+                <IconAction
+                  label={property.is_published ? "Hide Property" : "View Property"}
                   onClick={() =>
                     update.mutate(
                       { id: property.id, values: { is_published: !property.is_published } },
@@ -499,29 +500,28 @@ function PropertiesPage() {
                   ) : (
                     <EyeOff className="h-4 w-4" />
                   )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Share"
+                </IconAction>
+                <IconAction
+                  label="Share Property"
                   onClick={() => setShare({ slug: property.slug, title: property.title })}
                 >
                   <Share2 className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" asChild aria-label="Open public page">
+                </IconAction>
+                <IconAction label="Open Public Listing" asChild>
                   <Link to="/property/$slug" params={{ slug: property.slug }} target="_blank">
                     <ExternalLink className="h-4 w-4" />
                   </Link>
-                </Button>
-                <Button variant="ghost" size="icon" asChild aria-label="Brochure">
+                </IconAction>
+                <IconAction label="Generate Brochure / PDF" asChild>
                   <Link to="/properties/$id/brochure" params={{ id: property.id }}>
                     <FileText className="h-4 w-4" />
                   </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Duplicate"
+                </IconAction>
+                <IconAction label="Copy Property Link" onClick={() => copyLink(property.slug)}>
+                  <Copy className="h-4 w-4" />
+                </IconAction>
+                <IconAction
+                  label="Duplicate Property"
                   onClick={() =>
                     duplicate.mutate(property, {
                       onSuccess: () => toast.success("Duplicated as a draft"),
@@ -529,21 +529,20 @@ function PropertiesPage() {
                     })
                   }
                 >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" asChild aria-label="Edit">
+                  <CopyPlus className="h-4 w-4" />
+                </IconAction>
+                <IconAction label="Edit Property" asChild>
                   <Link to="/properties/$id/edit" params={{ id: property.id }}>
                     <Pencil className="h-4 w-4" />
                   </Link>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Delete"
+                </IconAction>
+                <IconAction
+                  label="Delete Property"
                   onClick={() => setPendingDelete(property.id)}
+                  className="hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="text-destructive h-4 w-4" />
-                </Button>
+                </IconAction>
               </div>
             </div>
           ))}
