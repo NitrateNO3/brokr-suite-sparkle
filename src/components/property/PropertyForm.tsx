@@ -1,28 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, Save, Wand2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ExternalLink,
+  Loader2,
+  Rocket,
+  Save,
+  Wand2,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
 import { RichTextEditor } from "@/components/property/RichTextEditor";
 import { MediaManager } from "@/components/property/MediaManager";
 import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
+import { SearchableSelect } from "@/components/property/SearchableSelect";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
 import { friendlyError } from "@/lib/errors";
@@ -40,25 +43,34 @@ import {
   PROPERTY_TYPES,
   PURPOSES,
   STATUSES,
+  labelFor,
 } from "@/lib/constants";
-import { generatePropertyCode, slugify } from "@/lib/format";
+import {
+  areaUnitLabel,
+  formatPrice,
+  generatePropertyCode,
+  locationLine,
+  pricePerArea,
+  slugify,
+} from "@/lib/format";
 import { useCreateProperty, useUpdateProperty, type Property } from "@/lib/queries";
 import { useTeamQuery } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 
 const schema = z.object({
   title: z.string().min(4, "Give the listing a descriptive title"),
   property_code: z.string().min(3),
-  slug: z.string().min(3),
+  slug: z.string().min(3, "A URL slug is required"),
   property_type: z.string(),
   purpose: z.string(),
   status: z.string(),
   description: z.string().optional().nullable(),
-  price: z.coerce.number().min(0),
+  price: z.coerce.number().min(0, "Price cannot be negative"),
   negotiable: z.boolean(),
   maintenance_charges: z.coerce.number().optional().nullable(),
   booking_amount: z.coerce.number().optional().nullable(),
   security_deposit: z.coerce.number().optional().nullable(),
-  city: z.string(),
+  city: z.string().min(2, "Choose a city"),
   sector: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   landmark: z.string().optional().nullable(),
@@ -79,6 +91,7 @@ const schema = z.object({
   super_area: z.coerce.number().optional().nullable(),
   age: z.string().optional().nullable(),
   furnishing: z.string().optional().nullable(),
+  builder: z.string().optional().nullable(),
   amenities: z.array(z.string()),
   cover_image: z.string().optional().nullable(),
   youtube_url: z.string().optional().nullable(),
@@ -105,21 +118,52 @@ const schema = z.object({
   share_show_description: z.boolean(),
   share_show_amenities: z.boolean(),
   share_show_specs: z.boolean(),
+  share_show_documents: z.boolean(),
 });
 
 export const SHARE_FIELDS = [
   { key: "share_show_price", label: "Price", hint: "Hide to share without any pricing" },
   { key: "share_show_location", label: "City & sector", hint: "Broad location line" },
-  { key: "share_show_address", label: "Exact address", hint: "Street address and landmark" },
+  { key: "share_show_address", label: "Exact address", hint: "Street address, map and landmark" },
   { key: "share_show_specs", label: "Specifications", hint: "Beds, baths, area, facing" },
   { key: "share_show_description", label: "Description", hint: "About this property" },
   { key: "share_show_amenities", label: "Amenities", hint: "Amenity chips" },
   { key: "share_show_contact", label: "Agent contact", hint: "Phone number on the page" },
+  { key: "share_show_documents", label: "Documents", hint: "Brochures and PDFs" },
 ] as const;
 
 export type PropertyFormValues = z.infer<typeof schema>;
 
 const DRAFT_KEY = "brokrsuite-property-draft";
+
+const STEPS = [
+  { id: "basics", label: "Basic information" },
+  { id: "pricing", label: "Pricing" },
+  { id: "location", label: "Location" },
+  { id: "details", label: "Property details" },
+  { id: "amenities", label: "Amenities" },
+  { id: "media", label: "Media upload" },
+  { id: "seo", label: "SEO & sharing" },
+  { id: "agent", label: "Assign agent" },
+  { id: "preview", label: "Preview" },
+  { id: "publish", label: "Publish" },
+] as const;
+
+const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
+  0: ["title", "slug", "property_type", "purpose", "status"],
+  1: ["price"],
+  2: ["city"],
+  3: [],
+  4: [],
+  5: [],
+  6: [],
+  7: [],
+  8: [],
+  9: [],
+};
+
+const RESIDENTIAL = ["apartment", "builder_floor", "villa", "independent_house", "penthouse"];
+const LAND = ["plot", "farm_house"];
 
 function defaults(property?: Property | null): PropertyFormValues {
   return {
@@ -156,6 +200,7 @@ function defaults(property?: Property | null): PropertyFormValues {
     super_area: property?.super_area ?? null,
     age: property?.age ?? null,
     furnishing: property?.furnishing ?? null,
+    builder: property?.builder ?? "",
     amenities: property?.amenities ?? [],
     cover_image: property?.cover_image ?? "",
     youtube_url: property?.youtube_url ?? "",
@@ -182,6 +227,7 @@ function defaults(property?: Property | null): PropertyFormValues {
     share_show_description: property?.share_show_description ?? true,
     share_show_amenities: property?.share_show_amenities ?? true,
     share_show_specs: property?.share_show_specs ?? true,
+    share_show_documents: property?.share_show_documents ?? false,
   };
 }
 
@@ -189,10 +235,12 @@ function Field({
   label,
   children,
   hint,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
   hint?: string | undefined;
+  error?: string | undefined;
 }) {
   return (
     <div className="space-y-1.5">
@@ -200,7 +248,11 @@ function Field({
         {label}
       </Label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -214,22 +266,25 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [step, setStep] = useState(0);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(schema),
     defaultValues: defaults(property),
+    mode: "onChange",
   });
 
-  const { register, handleSubmit, watch, setValue, formState } = form;
+  const { register, watch, setValue, trigger, getValues, formState } = form;
   const values = watch();
+  const errors = formState.errors;
 
-  // Auto-save draft locally for new listings so nothing is lost on refresh.
+  // Autosave the in-progress listing locally so a refresh never loses work.
   useEffect(() => {
     if (property) return;
     const timer = setTimeout(() => {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(values));
       setSavedAt(new Date().toLocaleTimeString());
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [values, property]);
 
@@ -245,24 +300,75 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Warn before leaving with unsaved edits.
+  useEffect(() => {
+    const handler = (event: BeforeUnloadEvent) => {
+      if (!formState.isDirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [formState.isDirty]);
+
   const autoSlug = useCallback(() => {
-    const generated = slugify(values.title || "");
-    setValue("slug", generated, { shouldDirty: true });
+    setValue("slug", slugify(values.title || ""), { shouldDirty: true });
     if (!values.meta_title) setValue("meta_title", values.title);
   }, [values.title, values.meta_title, setValue]);
 
-  // Keep the slug in sync with the title until it is edited manually.
   useEffect(() => {
     if (property || formState.dirtyFields.slug) return;
     setValue("slug", slugify(values.title || ""));
   }, [values.title, property, formState.dirtyFields.slug, setValue]);
 
-  const onSubmit = handleSubmit(async (data) => {
+  const type = values.property_type;
+  const isLand = LAND.includes(type);
+  const isResidential = RESIDENTIAL.includes(type);
+  const showRooms = isResidential;
+  const showFloors = !isLand;
+
+  const sectorOptions = useMemo(
+    () =>
+      values.city === "Gurgaon"
+        ? GURGAON_SECTORS.map((s) => ({ value: s, label: `Sector ${s}` }))
+        : [],
+    [values.city],
+  );
+
+  const completion = useMemo(() => {
+    const checks = [
+      Boolean(values.title && values.title.length > 3),
+      Boolean(values.slug),
+      Number(values.price) > 0,
+      Boolean(values.city),
+      Boolean(values.address || values.sector),
+      Boolean(values.super_area || values.builtup_area || values.carpet_area),
+      (values.amenities ?? []).length > 0,
+      Boolean(values.cover_image || pendingFiles.length),
+      Boolean(values.meta_description),
+      Boolean(values.agent_phone),
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [values, pendingFiles.length]);
+
+  const persist = async (overrides: Partial<PropertyFormValues> = {}) => {
+    const valid = await trigger();
+    if (!valid) {
+      toast.error("Please fix the highlighted fields");
+      const firstBad = Object.keys(form.formState.errors)[0];
+      const target = STEPS.findIndex((_, index) =>
+        (STEP_FIELDS[index] ?? []).includes(firstBad as keyof PropertyFormValues),
+      );
+      if (target >= 0) setStep(target);
+      return;
+    }
+    const data = { ...getValues(), ...overrides };
     const payload = {
       ...data,
       slug: data.slug || slugify(data.title),
       meta_title: data.meta_title || data.title,
       sector: data.sector || null,
+      builder: data.builder || null,
       assigned_to: data.assigned_to || null,
       facing: (data.facing || null) as never,
       age: (data.age || null) as never,
@@ -272,7 +378,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       status: data.status as never,
       area_unit: data.area_unit as never,
     };
-    // Offline: queue the listing locally and sync it when connectivity returns.
+
     if (!(await isConnected())) {
       await saveDraft({ propertyId: property?.id ?? null, values: payload as never });
       toast.success("Saved offline — this listing syncs automatically once you're back online");
@@ -282,11 +388,11 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     try {
       if (property) {
         await update.mutateAsync({ id: property.id, values: payload as never });
-        toast.success("Listing updated");
+        form.reset(data);
+        toast.success(overrides.is_published ? "Listing published" : "Listing saved");
       } else {
         const created = await create.mutateAsync(payload as never);
 
-        // Upload any images staged before the listing existed.
         if (pendingFiles.length) {
           setUploading(true);
           let cover: string | null = null;
@@ -314,70 +420,95 @@ export function PropertyForm({ property }: { property?: Property | null }) {
         }
 
         localStorage.removeItem(DRAFT_KEY);
-        toast.success("Listing created");
+        form.reset(data);
+        toast.success(overrides.is_published ? "Listing published" : "Listing created");
         navigate({ to: "/properties/$id/edit", params: { id: created.id } });
       }
     } catch (error) {
       toast.error(friendlyError(error, "Could not save the listing"));
     }
-  });
+  };
+
+  const next = async () => {
+    const fields = STEP_FIELDS[step] ?? [];
+    const ok = fields.length ? await trigger(fields) : true;
+    if (!ok) {
+      toast.error("Please complete this step first");
+      return;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const back = () => {
+    setStep((s) => Math.max(s - 1, 0));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const pending = create.isPending || update.isPending || uploading;
-  const sectorOptions = values.city === "Gurgaon" ? GURGAON_SECTORS : [];
+  const rate = pricePerArea(
+    Number(values.price),
+    Number(values.super_area ?? values.builtup_area ?? values.carpet_area ?? 0),
+    values.area_unit,
+  );
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="surface flex flex-wrap items-center justify-between gap-3 p-4">
-        <div className="text-sm">
-          <p className="font-medium">{property ? property.property_code : values.property_code}</p>
-          <p className="text-xs text-muted-foreground">
-            {savedAt ? `Draft auto-saved at ${savedAt}` : "Changes are auto-saved locally"}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={values.is_published}
-              onCheckedChange={(v) => setValue("is_published", v, { shouldDirty: true })}
-              id="published"
-            />
-            <Label htmlFor="published" className="text-sm">
-              Published
-            </Label>
+    <div className="space-y-6 pb-28">
+      <div className="surface space-y-3 p-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">
+              Step {step + 1} of {STEPS.length} · {STEPS[step]!.label}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {property ? property.property_code : values.property_code} ·{" "}
+              {savedAt ? `Draft auto-saved at ${savedAt}` : "Changes are auto-saved locally"}
+            </p>
           </div>
-          <Button type="submit" disabled={pending}>
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {property ? "Save changes" : "Create listing"}
-          </Button>
+          <span className="shrink-0 text-sm font-semibold text-primary">{completion}% complete</span>
+        </div>
+        <Progress value={((step + 1) / STEPS.length) * 100} className="h-1.5" />
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {STEPS.map((s, index) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setStep(index)}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition",
+                index === step
+                  ? "bg-primary text-primary-foreground"
+                  : index < step
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {index < step ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <span className="text-[10px] font-semibold">{index + 1}</span>
+              )}
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <Tabs defaultValue="basics">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
-          <TabsTrigger value="basics">Basics</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing</TabsTrigger>
-          <TabsTrigger value="location">Location</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="amenities">Amenities</TabsTrigger>
-          <TabsTrigger value="media">Media</TabsTrigger>
-          <TabsTrigger value="seo">SEO &amp; Flags</TabsTrigger>
-          <TabsTrigger value="sharing">Sharing</TabsTrigger>
-
-          <TabsTrigger value="agent">Agent</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="basics" className="surface mt-4 space-y-5 p-5">
+      {/* Step 1 — Basic information */}
+      {step === 0 && (
+        <div className="surface space-y-5 p-5">
           <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Property title">
+            <Field label="Property title" error={errors.title?.message}>
               <Input {...register("title")} placeholder="Luxury 4BHK Villa in Sector 56" />
-              {formState.errors.title && (
-                <p className="text-xs text-destructive">{formState.errors.title.message}</p>
-              )}
             </Field>
-            <Field label="Property ID">
+            <Field label="Property ID" hint="Generated automatically">
               <Input {...register("property_code")} readOnly className="bg-muted/60" />
             </Field>
-            <Field label="Slug" hint="Used for the public URL /property/…">
+            <Field
+              label="Slug"
+              hint="Used for the public URL /property/…"
+              error={errors.slug?.message}
+            >
               <div className="flex gap-2">
                 <Input {...register("slug")} placeholder="luxury-4bhk-villa-sector-56" />
                 <Button type="button" variant="secondary" onClick={autoSlug}>
@@ -386,55 +517,28 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               </div>
             </Field>
             <Field label="Property type">
-              <Select
+              <SearchableSelect
+                options={PROPERTY_TYPES}
                 value={values.property_type}
-                onValueChange={(v) => setValue("property_type", v, { shouldDirty: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROPERTY_TYPES.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setValue("property_type", v, { shouldDirty: true })}
+              />
             </Field>
             <Field label="Purpose">
-              <Select
+              <SearchableSelect
+                options={PURPOSES}
                 value={values.purpose}
-                onValueChange={(v) => setValue("purpose", v, { shouldDirty: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PURPOSES.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setValue("purpose", v, { shouldDirty: true })}
+              />
             </Field>
             <Field label="Status">
-              <Select
+              <SearchableSelect
+                options={STATUSES}
                 value={values.status}
-                onValueChange={(v) => setValue("status", v, { shouldDirty: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => setValue("status", v, { shouldDirty: true })}
+              />
+            </Field>
+            <Field label="Builder / developer" hint="Optional — shown on the public page">
+              <Input {...register("builder")} placeholder="DLF, M3M, Godrej…" />
             </Field>
           </div>
           <Field label="Description">
@@ -443,11 +547,18 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               onChange={(html) => setValue("description", html, { shouldDirty: true })}
             />
           </Field>
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="pricing" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
-          <Field label="Expected price (₹)">
-            <Input type="number" {...register("price")} />
+      {/* Step 2 — Pricing */}
+      {step === 1 && (
+        <div className="surface grid gap-5 p-5 md:grid-cols-2">
+          <Field
+            label="Expected price (₹)"
+            hint={Number(values.price) > 0 ? formatPrice(Number(values.price)) : undefined}
+            error={errors.price?.message}
+          >
+            <Input type="number" inputMode="numeric" {...register("price")} />
           </Field>
           <div className="flex items-end gap-3 pb-2">
             <Switch
@@ -463,52 +574,45 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           <Field label="Booking amount (₹)">
             <Input type="number" {...register("booking_amount")} />
           </Field>
-          <Field label="Security deposit (₹)">
-            <Input type="number" {...register("security_deposit")} />
-          </Field>
-        </TabsContent>
+          {values.purpose !== "sale" && (
+            <Field label="Security deposit (₹)">
+              <Input type="number" {...register("security_deposit")} />
+            </Field>
+          )}
+          {rate && (
+            <div className="surface col-span-full bg-muted/40 p-4 text-sm">
+              Rate works out to <span className="font-semibold">{rate}</span>
+            </div>
+          )}
+        </div>
+      )}
 
-        <TabsContent value="location" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
-          <Field label="City">
-            <Select
+      {/* Step 3 — Location */}
+      {step === 2 && (
+        <div className="surface grid gap-5 p-5 md:grid-cols-2">
+          <Field label="City" error={errors.city?.message}>
+            <SearchableSelect
+              options={CITIES.map((c) => ({ value: c, label: c }))}
               value={values.city}
-              onValueChange={(v) => {
+              allowCustom
+              onChange={(v) => {
                 setValue("city", v, { shouldDirty: true });
                 setValue("sector", "", { shouldDirty: true });
               }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CITIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </Field>
           <Field
-            label="Sector"
-            hint={sectorOptions.length ? undefined : "Sectors apply to Gurgaon"}
+            label="Sector / locality"
+            hint={sectorOptions.length ? "Type to search" : "Free text for this city"}
           >
-            <Select
+            <SearchableSelect
+              options={sectorOptions}
               value={values.sector ?? ""}
-              onValueChange={(v) => setValue("sector", v, { shouldDirty: true })}
-              disabled={!sectorOptions.length}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select sector" />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {sectorOptions.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    Sector {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              allowCustom
+              clearable
+              placeholder="Select or type a locality"
+              onChange={(v) => setValue("sector", v, { shouldDirty: true })}
+            />
           </Field>
           <Field label="Address">
             <Input {...register("address")} />
@@ -517,7 +621,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
             <Input {...register("landmark")} />
           </Field>
           <Field label="Pin code">
-            <Input {...register("pin_code")} />
+            <Input inputMode="numeric" maxLength={6} {...register("pin_code")} />
           </Field>
           <Field label="Google Maps URL">
             <Input {...register("maps_url")} placeholder="https://maps.google.com/…" />
@@ -528,118 +632,125 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           <Field label="Longitude">
             <Input type="number" step="any" {...register("longitude")} />
           </Field>
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="details" className="surface mt-4 grid gap-5 p-5 md:grid-cols-3">
-          <Field label="Bedrooms">
-            <Input type="number" {...register("bedrooms")} />
-          </Field>
-          <Field label="Bathrooms">
-            <Input type="number" {...register("bathrooms")} />
-          </Field>
-          <Field label="Balconies">
-            <Input type="number" {...register("balconies")} />
-          </Field>
-          <Field label="Parking">
-            <Input type="number" {...register("parking")} />
-          </Field>
-          <Field label="Floor">
-            <Input type="number" {...register("floor_no")} />
-          </Field>
-          <Field label="Total floors">
-            <Input type="number" {...register("total_floors")} />
-          </Field>
+      {/* Step 4 — Property details */}
+      {step === 3 && (
+        <div className="surface grid gap-5 p-5 md:grid-cols-3">
+          {showRooms && (
+            <>
+              <Field label="Bedrooms">
+                <Input type="number" {...register("bedrooms")} />
+              </Field>
+              <Field label="Bathrooms">
+                <Input type="number" {...register("bathrooms")} />
+              </Field>
+              <Field label="Balconies">
+                <Input type="number" {...register("balconies")} />
+              </Field>
+            </>
+          )}
+          {!isLand && (
+            <Field label="Parking">
+              <Input type="number" {...register("parking")} />
+            </Field>
+          )}
+          {showFloors && (
+            <>
+              <Field label="Floor">
+                <Input type="number" {...register("floor_no")} />
+              </Field>
+              <Field label="Total floors">
+                <Input type="number" {...register("total_floors")} />
+              </Field>
+            </>
+          )}
           <Field label="Facing">
-            <Select
+            <SearchableSelect
+              options={FACINGS}
               value={values.facing ?? ""}
-              onValueChange={(v) => setValue("facing", v, { shouldDirty: true })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {FACINGS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              clearable
+              onChange={(v) => setValue("facing", v, { shouldDirty: true })}
+            />
           </Field>
           <Field label="Area unit">
-            <Select
+            <SearchableSelect
+              options={AREA_UNITS}
               value={values.area_unit}
-              onValueChange={(v) => setValue("area_unit", v, { shouldDirty: true })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AREA_UNITS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(v) => setValue("area_unit", v, { shouldDirty: true })}
+            />
           </Field>
-          <Field label="Property age">
-            <Select
+          <Field label="Property age / availability">
+            <SearchableSelect
+              options={PROPERTY_AGES}
               value={values.age ?? ""}
-              onValueChange={(v) => setValue("age", v, { shouldDirty: true })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROPERTY_AGES.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              clearable
+              onChange={(v) => setValue("age", v, { shouldDirty: true })}
+            />
           </Field>
-          <Field label="Carpet area">
+          <Field label={`Carpet area (${areaUnitLabel(values.area_unit)})`}>
             <Input type="number" {...register("carpet_area")} />
           </Field>
-          <Field label="Built-up area">
+          <Field label={`Built-up area (${areaUnitLabel(values.area_unit)})`}>
             <Input type="number" {...register("builtup_area")} />
           </Field>
-          <Field label="Super area">
+          <Field label={`Super area (${areaUnitLabel(values.area_unit)})`}>
             <Input type="number" {...register("super_area")} />
           </Field>
-          <Field label="Furnishing">
-            <Select
-              value={values.furnishing ?? ""}
-              onValueChange={(v) => setValue("furnishing", v, { shouldDirty: true })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                {FURNISHINGS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </TabsContent>
+          {!isLand && (
+            <Field label="Furnishing">
+              <SearchableSelect
+                options={FURNISHINGS}
+                value={values.furnishing ?? ""}
+                clearable
+                onChange={(v) => setValue("furnishing", v, { shouldDirty: true })}
+              />
+            </Field>
+          )}
+        </div>
+      )}
 
-        <TabsContent value="amenities" className="surface mt-4 p-5">
-          <Field label="Amenities">
+      {/* Step 5 — Amenities */}
+      {step === 4 && (
+        <div className="surface space-y-4 p-5">
+          <Field label="Amenities" hint="Search, or click the quick picks below">
             <MultiSelectChips
               options={AMENITY_LIST}
               value={values.amenities}
-              onChange={(next) => setValue("amenities", next, { shouldDirty: true })}
+              onChange={(nextValue) => setValue("amenities", nextValue, { shouldDirty: true })}
               placeholder="Search and select amenities"
             />
           </Field>
-        </TabsContent>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Family essentials", picks: ["Lift", "Power Backup", "24x7 Security", "Visitor Parking"] },
+              { label: "Luxury pack", picks: ["Swimming Pool", "Gym", "Club House", "Modular Kitchen"] },
+              { label: "Green living", picks: ["Garden", "Jogging Track", "Kids Play Area", "Pet Friendly"] },
+            ].map((preset) => (
+              <Button
+                key={preset.label}
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  setValue(
+                    "amenities",
+                    Array.from(new Set([...(values.amenities ?? []), ...preset.picks])),
+                    { shouldDirty: true },
+                  )
+                }
+              >
+                + {preset.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
-        <TabsContent value="media" className="surface mt-4 space-y-5 p-5">
+      {/* Step 6 — Media */}
+      {step === 5 && (
+        <div className="surface space-y-5 p-5">
           {property ? (
             <MediaManager
               propertyId={property.id}
@@ -654,29 +765,189 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               onCoverIndexChange={setCoverIndex}
             />
           )}
-
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="YouTube link">
               <Input {...register("youtube_url")} placeholder="https://youtube.com/watch?v=…" />
             </Field>
-            <Field label="Virtual tour link">
-              <Input {...register("virtual_tour_url")} />
+            <Field label="360° / virtual tour link">
+              <Input {...register("virtual_tour_url")} placeholder="https://…" />
             </Field>
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="seo" className="surface mt-4 space-y-5 p-5">
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Meta title">
-              <Input {...register("meta_title")} />
-            </Field>
-            <Field label="Keywords">
-              <Input {...register("keywords")} placeholder="villa, sector 56, gurgaon" />
+      {/* Step 7 — SEO & sharing */}
+      {step === 6 && (
+        <div className="space-y-5">
+          <div className="surface space-y-5 p-5">
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field label="Meta title" hint="Defaults to the listing title">
+                <Input {...register("meta_title")} />
+              </Field>
+              <Field label="Keywords">
+                <Input {...register("keywords")} placeholder="villa, sector 56, gurgaon" />
+              </Field>
+            </div>
+            <Field label="Meta description">
+              <Textarea rows={3} {...register("meta_description")} />
             </Field>
           </div>
-          <Field label="Meta description">
-            <Textarea rows={3} {...register("meta_description")} />
+
+          <div className="surface space-y-4 p-5">
+            <div>
+              <p className="display-title text-lg">What clients see on the shared link</p>
+              <p className="text-sm text-muted-foreground">
+                Turn anything off to hide it from the public property page. Your internal records
+                always keep the full details.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {SHARE_FIELDS.map((field) => (
+                <label
+                  key={field.key}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                >
+                  <span>
+                    <span className="text-sm font-medium">{field.label}</span>
+                    <span className="block text-xs text-muted-foreground">{field.hint}</span>
+                  </span>
+                  <Switch
+                    checked={Boolean(values[field.key])}
+                    onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 8 — Assign agent */}
+      {step === 7 && (
+        <div className="surface grid gap-5 p-5 md:grid-cols-2">
+          <Field label="Assigned teammate" hint="The team member responsible for this listing.">
+            <SearchableSelect
+              options={(team ?? []).map((member) => ({
+                value: member.id,
+                label: member.full_name ?? member.email ?? "Teammate",
+              }))}
+              value={values.assigned_to ?? ""}
+              clearable
+              placeholder="Unassigned"
+              onChange={(v) => setValue("assigned_to", v, { shouldDirty: true })}
+            />
           </Field>
+          <Field label="Agent name">
+            <Input {...register("agent_name")} />
+          </Field>
+          <Field label="Phone">
+            <Input {...register("agent_phone")} />
+          </Field>
+          <Field label="WhatsApp">
+            <Input {...register("agent_whatsapp")} />
+          </Field>
+          <Field label="Email">
+            <Input type="email" {...register("agent_email")} />
+          </Field>
+          <Field label="Office address">
+            <Input {...register("agent_office")} />
+          </Field>
+        </div>
+      )}
+
+      {/* Step 9 — Preview */}
+      {step === 8 && (
+        <div className="surface overflow-hidden">
+          <div className="grid gap-0 md:grid-cols-[280px_minmax(0,1fr)]">
+            {values.cover_image ? (
+              <img
+                src={values.cover_image}
+                alt="Listing cover"
+                className="h-52 w-full object-cover md:h-full"
+              />
+            ) : (
+              <div className="grid h-52 place-items-center bg-muted text-xs text-muted-foreground md:h-full">
+                {pendingFiles.length
+                  ? `${pendingFiles.length} photo(s) ready to upload`
+                  : "No cover photo yet"}
+              </div>
+            )}
+            <div className="space-y-3 p-5">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                {values.property_code} · For {values.purpose} ·{" "}
+                {labelFor(PROPERTY_TYPES, values.property_type)}
+              </p>
+              <h2 className="display-title text-2xl">{values.title || "Untitled listing"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {locationLine(values.city, values.sector)}
+              </p>
+              <p className="display-title text-2xl text-primary">
+                {Number(values.price) > 0 ? formatPrice(Number(values.price)) : "Price on request"}
+                {rate && <span className="ml-2 text-sm text-muted-foreground">{rate}</span>}
+              </p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {[
+                  values.bedrooms ? `${values.bedrooms} Beds` : null,
+                  values.bathrooms ? `${values.bathrooms} Baths` : null,
+                  values.super_area
+                    ? `${values.super_area} ${areaUnitLabel(values.area_unit)}`
+                    : null,
+                  values.facing ? labelFor(FACINGS, values.facing) : null,
+                  values.furnishing ? labelFor(FURNISHINGS, values.furnishing) : null,
+                ]
+                  .filter(Boolean)
+                  .map((chip) => (
+                    <span key={chip as string} className="rounded-full border border-border px-3 py-1">
+                      {chip}
+                    </span>
+                  ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(values.amenities ?? []).slice(0, 8).map((amenity) => (
+                  <span
+                    key={amenity}
+                    className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-secondary-foreground"
+                  >
+                    {amenity}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Public link: /property/{values.slug || "…"}
+              </p>
+              {property?.is_published && (
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <a href={`/property/${property.slug}`} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-4 w-4" /> Open live page
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 10 — Publish */}
+      {step === 9 && (
+        <div className="surface space-y-5 p-5">
+          <div>
+            <p className="display-title text-lg">Ready to go live?</p>
+            <p className="text-sm text-muted-foreground">
+              Publishing makes the listing reachable at its public link and in your sitemap.
+            </p>
+          </div>
+          <label className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+            <span>
+              <span className="text-sm font-medium">Published</span>
+              <span className="block text-xs text-muted-foreground">
+                Visible to anyone with the link
+              </span>
+            </span>
+            <Switch
+              checked={values.is_published}
+              onCheckedChange={(v) => setValue("is_published", v, { shouldDirty: true })}
+            />
+          </label>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {PROPERTY_FLAGS.map((flag) => (
               <label
@@ -695,76 +966,60 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               </label>
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="sharing" className="surface mt-4 space-y-4 p-5">
-          <div>
-            <p className="display-title text-lg">What clients see on the shared link</p>
-            <p className="text-sm text-muted-foreground">
-              Turn anything off to hide it from the public property page you share. Your internal
-              records always keep the full details.
+          {completion < 70 && (
+            <p className="rounded-xl bg-muted/60 p-4 text-xs text-muted-foreground">
+              This listing is {completion}% complete. Adding photos, area and a description
+              significantly improves enquiries.
             </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {SHARE_FIELDS.map((field) => (
-              <label
-                key={field.key}
-                className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
-              >
-                <span>
-                  <span className="text-sm font-medium">{field.label}</span>
-                  <span className="block text-xs text-muted-foreground">{field.hint}</span>
-                </span>
-                <Switch
-                  checked={Boolean(values[field.key])}
-                  onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
-                />
-              </label>
-            ))}
-          </div>
-        </TabsContent>
+          )}
+        </div>
+      )}
 
-        <TabsContent value="agent" className="surface mt-4 grid gap-5 p-5 md:grid-cols-2">
-          <Field label="Agent name">
-            <Input {...register("agent_name")} />
-          </Field>
-          <Field label="Phone">
-            <Input {...register("agent_phone")} />
-          </Field>
-          <Field label="WhatsApp">
-            <Input {...register("agent_whatsapp")} />
-          </Field>
-          <Field label="Email">
-            <Input {...register("agent_email")} />
-          </Field>
-          <Field label="Office address">
-            <Input {...register("agent_office")} />
-          </Field>
-          <Field
-            label="Assigned teammate"
-            hint="The team member responsible for this listing."
+      {/* Sticky wizard navigation */}
+      <div className="glass fixed inset-x-0 bottom-0 z-30 border-t px-4 py-3">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" onClick={back} disabled={step === 0}>
+            <ArrowLeft className="h-4 w-4" /> Previous
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => void persist()}
+            disabled={pending}
           >
-            <Select
-              value={values.assigned_to || "unassigned"}
-              onValueChange={(v) =>
-                setValue("assigned_to", v === "unassigned" ? "" : v, { shouldDirty: true })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Unassigned" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned">Unassigned</SelectItem>
-                {(team ?? []).map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.full_name ?? member.email ?? "Teammate"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </TabsContent>
-      </Tabs>
-    </form>
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save draft
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="hidden sm:inline-flex"
+            onClick={() => setStep(8)}
+          >
+            Preview
+          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {step < STEPS.length - 1 ? (
+              <Button type="button" onClick={() => void next()}>
+                Next <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                disabled={pending}
+                onClick={() => void persist({ is_published: true, status: "available" })}
+              >
+                {pending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Rocket className="h-4 w-4" />
+                )}
+                Publish listing
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

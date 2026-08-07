@@ -20,9 +20,30 @@ function publicClient() {
   });
 }
 
-type PublicProperty = Database["public"]["Tables"]["properties"]["Row"] & {
+export type PublicProperty = Database["public"]["Tables"]["properties"]["Row"] & {
   property_images: Database["public"]["Tables"]["property_images"]["Row"][];
+  property_videos: { id: string; url: string; title: string | null }[];
+  property_documents: { id: string; url: string; name: string; doc_type: string | null }[];
 };
+
+export type PublicPropertyCard = {
+  slug: string;
+  title: string;
+  property_type: string;
+  purpose: string;
+  cover_image: string | null;
+  price: number | null;
+  city: string | null;
+  sector: string | null;
+  bedrooms: number | null;
+  super_area: number | null;
+  area_unit: string;
+};
+
+type RpcCaller = (
+  fn: string,
+  args: Record<string, unknown>,
+) => Promise<{ data: unknown; error: { message: string } | null }>;
 
 /**
  * Public read of one published listing plus its gallery.
@@ -35,17 +56,34 @@ export const getPublicProperty = createServerFn({ method: "GET" })
     // Redaction happens inside a SECURITY DEFINER routine that only the trusted
     // server role may execute, so it is called with the server-side client.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: property, error } = await (
-      supabaseAdmin.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown; error: { message: string } | null }>
-    )("get_published_property", { p_slug: data.slug });
+    const { data: property, error } = await (supabaseAdmin.rpc as unknown as RpcCaller)(
+      "get_published_property",
+      { p_slug: data.slug },
+    );
     if (error) throw new Error(error.message);
     if (!property) return null;
     return property as PublicProperty;
   });
 
+/** Compact public cards used for the "similar" and "recent" strips. */
+export const getPublicPropertyCards = createServerFn({ method: "GET" })
+  .inputValidator(
+    (data: { excludeSlug?: string; city?: string | null; propertyType?: string | null }) => data,
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cards, error } = await (supabaseAdmin.rpc as unknown as RpcCaller)(
+      "list_published_property_cards",
+      {
+        p_exclude_slug: data.excludeSlug ?? null,
+        p_city: data.city ?? null,
+        p_property_type: data.propertyType ?? null,
+        p_limit: 8,
+      },
+    );
+    if (error) throw new Error(error.message);
+    return (cards ?? []) as PublicPropertyCard[];
+  });
 
 /** Records an anonymous page view and bumps the denormalised counter. */
 export const recordPropertyView = createServerFn({ method: "POST" })
