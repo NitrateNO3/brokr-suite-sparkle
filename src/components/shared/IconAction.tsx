@@ -24,7 +24,7 @@ export function IconAction({
             type="button"
             variant="ghost"
             size="icon"
-            asChild={asChild}
+            asChild={asChild ?? false}
             aria-label={label}
             className={cn(
               "h-9 w-9 cursor-pointer rounded-full text-muted-foreground transition-all duration-200",
