@@ -289,3 +289,17 @@ export function useViewsQuery() {
     },
   });
 }
+
+/** Photo counts per property, used by the inventory grid cards. */
+export function usePropertyImageCountsQuery() {
+  return useQuery({
+    queryKey: ["property-image-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("property_images").select("property_id");
+      if (error) throw error;
+      const counts: Record<string, number> = {};
+      for (const row of data) counts[row.property_id] = (counts[row.property_id] ?? 0) + 1;
+      return counts;
+    },
+  });
+}
