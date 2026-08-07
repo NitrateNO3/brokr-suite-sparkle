@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.get_share_bundle(text) FROM anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.record_share_event(text, public.share_event_type, uuid, jsonb) FROM anon, authenticated;
