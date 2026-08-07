@@ -4,6 +4,7 @@ import {
   Building2,
   FileText,
   Copy,
+  CopyPlus,
   Download,
   ExternalLink,
   Pencil,
@@ -21,6 +22,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { IconAction } from "@/components/shared/IconAction";
 import { ShareDialog } from "@/components/shared/ShareDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +167,15 @@ function PropertiesPage() {
     await Promise.all(selected.map((id) => update.mutateAsync({ id, values })));
     toast.success(`Updated ${selected.length} ${selected.length === 1 ? "listing" : "listings"}`);
     setSelected([]);
+  };
+
+  const copyLink = async (slug: string) => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/property/${slug}`);
+      toast.success("Property link copied");
+    } catch {
+      toast.error("Could not copy the link");
+    }
   };
 
   const exportCsv = (rows: Property[]) => {
