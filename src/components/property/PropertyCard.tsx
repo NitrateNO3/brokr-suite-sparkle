@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   BadgeCheck,
@@ -23,6 +24,27 @@ import { PROPERTY_TYPES, labelFor } from "@/lib/constants";
 import type { Property } from "@/lib/queries";
 
 /** Premium inventory card used by the grid view of the properties module. */
+function CoverImage({ src, alt }: { src: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div className="grid h-44 w-full place-items-center bg-muted text-muted-foreground">
+        <Building2 className="h-8 w-8 opacity-40" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+    />
+  );
+}
+
 export function PropertyCard({
   property,
   selected,
@@ -56,19 +78,7 @@ export function PropertyCard({
   return (
     <article className="surface surface-hover group flex flex-col overflow-hidden">
       <div className="relative">
-        {property.cover_image ? (
-          <img
-            src={property.cover_image}
-            alt={`${property.title} cover photo`}
-            loading="lazy"
-            decoding="async"
-            className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="grid h-44 w-full place-items-center bg-muted text-muted-foreground">
-            <Building2 className="h-8 w-8 opacity-40" />
-          </div>
-        )}
+        <CoverImage src={property.cover_image} alt={`${property.title} cover photo`} />
 
         <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <Checkbox
@@ -133,6 +143,7 @@ export function PropertyCard({
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             aria-label={property.is_featured ? "Remove from featured" : "Mark as featured"}
             onClick={onToggleFeatured}
           >
@@ -141,33 +152,34 @@ export function PropertyCard({
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             aria-label={property.is_published ? "Unpublish" : "Publish"}
             onClick={onTogglePublished}
           >
             {property.is_published ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Share" onClick={onShare}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Share" onClick={onShare}>
             <Share2 className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Open public page">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8" aria-label="Open public page">
             <Link to="/property/$slug" params={{ slug: property.slug }} target="_blank">
               <ExternalLink className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Brochure">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8" aria-label="Brochure">
             <Link to="/properties/$id/brochure" params={{ id: property.id }}>
               <FileText className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Duplicate" onClick={onDuplicate}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Duplicate" onClick={onDuplicate}>
             <Copy className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Edit">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8" aria-label="Edit">
             <Link to="/properties/$id/edit" params={{ id: property.id }}>
               <Pencil className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Delete" onClick={onDelete}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Delete" onClick={onDelete}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
