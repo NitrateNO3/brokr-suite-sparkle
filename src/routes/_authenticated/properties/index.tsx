@@ -580,7 +580,11 @@ function PropertiesPage() {
           onOpenChange={(open) => !open && setShare(null)}
           slug={share.slug}
           title={share.title}
+          coverImage={share.coverImage ?? null}
+          subtitle={share.subtitle ?? null}
+          price={share.price ?? null}
         />
+
       )}
 
       <AlertDialog
