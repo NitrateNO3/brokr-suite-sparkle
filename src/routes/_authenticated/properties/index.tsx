@@ -102,7 +102,13 @@ function PropertiesPage() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
-  const [share, setShare] = useState<{ slug: string; title: string } | null>(null);
+  const [share, setShare] = useState<{
+    slug: string;
+    title: string;
+    coverImage?: string | null;
+    subtitle?: string | null;
+    price?: string | null;
+  } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [bulkDelete, setBulkDelete] = useState(false);
 
@@ -377,7 +383,15 @@ function PropertiesPage() {
                   agentName={
                     (team ?? []).find((m) => m.id === property.assigned_to)?.full_name ?? null
                   }
-                  onShare={() => setShare({ slug: property.slug, title: property.title })}
+                  onShare={() =>
+                    setShare({
+                      slug: property.slug,
+                      title: property.title,
+                      coverImage: property.cover_image,
+                      subtitle: locationLine(property.city, property.sector),
+                      price: formatPrice(Number(property.price)),
+                    })
+                  }
                   onDelete={() => setPendingDelete(property.id)}
                   onDuplicate={() =>
                     duplicate.mutate(property, {
