@@ -93,7 +93,7 @@ function CustomersPage() {
       <PageHeader
         title="Customers"
         description="Every buyer and tenant you work with, with shared properties, visits and follow-ups attached."
-      >
+        actions={
         <Button
           onClick={() => {
             setEditing(null);
@@ -102,7 +102,8 @@ function CustomersPage() {
         >
           <Plus className="h-4 w-4" /> Add customer
         </Button>
-      </PageHeader>
+        }
+      />
 
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row">
         <div className="relative flex-1">
