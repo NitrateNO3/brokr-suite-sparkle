@@ -13,6 +13,8 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  LayoutGrid,
+  Rows3,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,6 +53,9 @@ import {
 import { formatPrice, formatNumber, locationLine, timeAgo } from "@/lib/format";
 import { CITIES, PROPERTY_TYPES, STATUSES, labelFor } from "@/lib/constants";
 import { downloadCsv } from "@/lib/export";
+import { PropertyCard } from "@/components/property/PropertyCard";
+import { usePropertyImageCountsQuery } from "@/lib/queries";
+import { useTeamQuery } from "@/lib/roles";
 
 const PAGE_SIZE = 12;
 
@@ -85,7 +90,10 @@ function PropertiesPage() {
   const remove = useDeleteProperty();
   const duplicate = useDuplicateProperty();
   const update = useUpdateProperty();
+  const { data: imageCounts } = usePropertyImageCountsQuery();
+  const { data: team } = useTeamQuery();
 
+  const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [city, setCity] = useState("all");
@@ -260,6 +268,28 @@ function PropertiesPage() {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-1 rounded-lg border border-border p-1">
+          <Button
+            type="button"
+            size="icon"
+            variant={view === "grid" ? "secondary" : "ghost"}
+            className="h-8 w-8"
+            aria-label="Grid view"
+            onClick={() => setView("grid")}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant={view === "list" ? "secondary" : "ghost"}
+            className="h-8 w-8"
+            aria-label="List view"
+            onClick={() => setView("list")}
+          >
+            <Rows3 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {selected.length > 0 && (
@@ -335,7 +365,51 @@ function PropertiesPage() {
             </span>
           </div>
 
-          {pageRows.map((property) => (
+          {view === "grid" ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {pageRows.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  selected={selected.includes(property.id)}
+                  onToggleSelect={() => toggleRow(property.id)}
+                  imageCount={imageCounts?.[property.id] ?? 0}
+                  agentName={
+                    (team ?? []).find((m) => m.id === property.assigned_to)?.full_name ?? null
+                  }
+                  onShare={() => setShare({ slug: property.slug, title: property.title })}
+                  onDelete={() => setPendingDelete(property.id)}
+                  onDuplicate={() =>
+                    duplicate.mutate(property, {
+                      onSuccess: () => toast.success("Duplicated as a draft"),
+                      onError: (error) => toast.error(error.message),
+                    })
+                  }
+                  onTogglePublished={() =>
+                    update.mutate(
+                      { id: property.id, values: { is_published: !property.is_published } },
+                      {
+                        onSuccess: () =>
+                          toast.success(property.is_published ? "Unpublished" : "Published"),
+                      },
+                    )
+                  }
+                  onToggleFeatured={() =>
+                    update.mutate(
+                      { id: property.id, values: { is_featured: !property.is_featured } },
+                      {
+                        onSuccess: () =>
+                          toast.success(property.is_featured ? "Unfeatured" : "Featured"),
+                      },
+                    )
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {view === "list" &&
+            pageRows.map((property) => (
             <div
               key={property.id}
               className="surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center"
