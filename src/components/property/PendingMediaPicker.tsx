@@ -18,6 +18,7 @@ export function PendingMediaPicker({
   onCoverIndexChange: (index: number) => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const previews = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
@@ -26,6 +27,15 @@ export function PendingMediaPicker({
   const add = (list: FileList | null) => {
     if (!list?.length) return;
     onChange([...files, ...Array.from(list)]);
+  };
+
+  const reorder = (from: number, to: number) => {
+    if (from === to) return;
+    const next = [...files];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved!);
+    onChange(next);
+    if (coverIndex === from) onCoverIndexChange(to);
   };
 
   const remove = (index: number) => {
@@ -57,7 +67,7 @@ export function PendingMediaPicker({
         <UploadCloud className="mb-2 h-6 w-6 text-muted-foreground" />
         <p className="text-sm font-medium">Drag &amp; drop images, videos or PDFs</p>
         <p className="text-xs text-muted-foreground">
-          They upload automatically as soon as you create the listing
+          They upload automatically as soon as you create the listing · drag tiles to reorder
         </p>
         <input
           ref={inputRef}
@@ -77,7 +87,14 @@ export function PendingMediaPicker({
           {files.map((file, index) => (
             <div
               key={`${file.name}-${index}`}
-              className="group relative overflow-hidden rounded-xl border border-border"
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (dragIndex !== null) reorder(dragIndex, index);
+                setDragIndex(null);
+              }}
+              className="group relative cursor-grab overflow-hidden rounded-xl border border-border active:cursor-grabbing"
             >
               {file.type.startsWith("image/") ? (
                 <img

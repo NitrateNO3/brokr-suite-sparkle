@@ -213,6 +213,7 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           booking_amount: number | null
+          builder: string | null
           builtup_area: number | null
           carpet_area: number | null
           city: string
@@ -253,6 +254,7 @@ export type Database = {
           share_show_amenities: boolean
           share_show_contact: boolean
           share_show_description: boolean
+          share_show_documents: boolean
           share_show_location: boolean
           share_show_price: boolean
           share_show_specs: boolean
@@ -281,6 +283,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           booking_amount?: number | null
+          builder?: string | null
           builtup_area?: number | null
           carpet_area?: number | null
           city?: string
@@ -321,6 +324,7 @@ export type Database = {
           share_show_amenities?: boolean
           share_show_contact?: boolean
           share_show_description?: boolean
+          share_show_documents?: boolean
           share_show_location?: boolean
           share_show_price?: boolean
           share_show_specs?: boolean
@@ -349,6 +353,7 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           booking_amount?: number | null
+          builder?: string | null
           builtup_area?: number | null
           carpet_area?: number | null
           city?: string
@@ -389,6 +394,7 @@ export type Database = {
           share_show_amenities?: boolean
           share_show_contact?: boolean
           share_show_description?: boolean
+          share_show_documents?: boolean
           share_show_location?: boolean
           share_show_price?: boolean
           share_show_specs?: boolean
@@ -453,6 +459,7 @@ export type Database = {
           created_at: string
           id: string
           is_featured: boolean
+          media_kind: string
           property_id: string
           sort_order: number
           url: string
@@ -462,6 +469,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          media_kind?: string
           property_id: string
           sort_order?: number
           url: string
@@ -471,6 +479,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          media_kind?: string
           property_id?: string
           sort_order?: number
           url?: string
@@ -704,6 +713,15 @@ export type Database = {
     }
     Functions: {
       get_published_property: { Args: { p_slug: string }; Returns: Json }
+      list_published_property_cards: {
+        Args: {
+          p_city?: string
+          p_exclude_slug?: string
+          p_limit?: number
+          p_property_type?: string
+        }
+        Returns: Json
+      }
       list_published_property_slugs: {
         Args: never
         Returns: {

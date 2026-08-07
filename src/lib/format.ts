@@ -56,3 +56,36 @@ export function locationLine(city?: string | null, sector?: string | null): stri
   const label = /^\d/.test(sector.trim()) ? `Sector ${sector.trim()}` : sector.trim();
   return city ? `${label}, ${city}` : label;
 }
+
+/** Exact rupee amount, e.g. ₹1,25,00,000 */
+export function formatRupees(value?: number | null): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(value)}`;
+}
+
+const AREA_UNIT_LABEL: Record<string, string> = {
+  sqft: "sq.ft.",
+  sqyard: "sq.yd.",
+  acre: "acre",
+};
+
+export function areaUnitLabel(unit?: string | null): string {
+  return AREA_UNIT_LABEL[unit ?? "sqft"] ?? "sq.ft.";
+}
+
+/** "1,850 sq.ft." */
+export function formatArea(value?: number | null, unit?: string | null): string | null {
+  if (!value) return null;
+  return `${formatNumber(Number(value))} ${areaUnitLabel(unit)}`;
+}
+
+/** Rate per area unit, e.g. "₹12,500 / sq.ft." */
+export function pricePerArea(
+  price?: number | null,
+  area?: number | null,
+  unit?: string | null,
+): string | null {
+  if (!price || !area || Number(area) <= 0) return null;
+  const rate = Math.round(Number(price) / Number(area));
+  return `${formatRupees(rate)} / ${areaUnitLabel(unit)}`;
+}
