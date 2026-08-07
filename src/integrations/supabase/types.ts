@@ -71,6 +71,253 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_activity: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          customer_id: string
+          detail: string | null
+          id: string
+          kind: string
+          meta: Json | null
+          title: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          customer_id: string
+          detail?: string | null
+          id?: string
+          kind: string
+          meta?: Json | null
+          title: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          customer_id?: string
+          detail?: string | null
+          id?: string
+          kind?: string
+          meta?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_activity_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_activity_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_documents: {
+        Row: {
+          created_at: string
+          customer_id: string
+          doc_type: string | null
+          id: string
+          name: string
+          uploaded_by: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          doc_type?: string | null
+          id?: string
+          name: string
+          uploaded_by?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          doc_type?: string | null
+          id?: string
+          name?: string
+          uploaded_by?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_notes: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          customer_id: string
+          id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          customer_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          assigned_to: string | null
+          bhk_preference: number | null
+          budget_max: number | null
+          budget_min: number | null
+          company: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          full_name: string
+          id: string
+          intent: Database["public"]["Enums"]["customer_intent"]
+          is_vip: boolean
+          last_contacted_at: string | null
+          lead_id: string | null
+          next_follow_up_at: string | null
+          notes: string | null
+          occupation: string | null
+          phone: string | null
+          photo_url: string | null
+          preferred_city: string | null
+          preferred_location: string | null
+          priority: Database["public"]["Enums"]["customer_priority"]
+          property_type: Database["public"]["Enums"]["property_type"] | null
+          source: string | null
+          status: Database["public"]["Enums"]["customer_status"]
+          tags: string[]
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          bhk_preference?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          intent?: Database["public"]["Enums"]["customer_intent"]
+          is_vip?: boolean
+          last_contacted_at?: string | null
+          lead_id?: string | null
+          next_follow_up_at?: string | null
+          notes?: string | null
+          occupation?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          preferred_city?: string | null
+          preferred_location?: string | null
+          priority?: Database["public"]["Enums"]["customer_priority"]
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          tags?: string[]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          bhk_preference?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          intent?: Database["public"]["Enums"]["customer_intent"]
+          is_vip?: boolean
+          last_contacted_at?: string | null
+          lead_id?: string | null
+          next_follow_up_at?: string | null
+          notes?: string | null
+          occupation?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          preferred_city?: string | null
+          preferred_location?: string | null
+          priority?: Database["public"]["Enums"]["customer_priority"]
+          property_type?: Database["public"]["Enums"]["property_type"] | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["customer_status"]
+          tags?: string[]
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           assigned_to: string | null
@@ -142,25 +389,46 @@ export type Database = {
       }
       locations: {
         Row: {
+          area: string | null
           city: string
           created_at: string
+          demand: Database["public"]["Enums"]["demand_level"]
+          description: string | null
           id: string
+          image_url: string | null
           pin_code: string | null
           sector: string | null
+          sub_sector: string | null
+          top_builder: string | null
+          updated_at: string
         }
         Insert: {
+          area?: string | null
           city: string
           created_at?: string
+          demand?: Database["public"]["Enums"]["demand_level"]
+          description?: string | null
           id?: string
+          image_url?: string | null
           pin_code?: string | null
           sector?: string | null
+          sub_sector?: string | null
+          top_builder?: string | null
+          updated_at?: string
         }
         Update: {
+          area?: string | null
           city?: string
           created_at?: string
+          demand?: Database["public"]["Enums"]["demand_level"]
+          description?: string | null
           id?: string
+          image_url?: string | null
           pin_code?: string | null
           sector?: string | null
+          sub_sector?: string | null
+          top_builder?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -494,6 +762,105 @@ export type Database = {
           },
         ]
       }
+      property_share_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_favourite: boolean
+          property_id: string
+          share_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_favourite?: boolean
+          property_id: string
+          share_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_favourite?: boolean
+          property_id?: string
+          share_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_share_items_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_share_items_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "property_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_shares: {
+        Row: {
+          channel: Database["public"]["Enums"]["share_channel"]
+          created_at: string
+          customer_id: string | null
+          id: string
+          last_viewed_at: string | null
+          message: string | null
+          opened_at: string | null
+          shared_by: string | null
+          title: string | null
+          token: string
+          view_count: number
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["share_channel"]
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          message?: string | null
+          opened_at?: string | null
+          shared_by?: string | null
+          title?: string | null
+          token?: string
+          view_count?: number
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["share_channel"]
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          message?: string | null
+          opened_at?: string | null
+          shared_by?: string | null
+          title?: string | null
+          token?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_shares_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_shares_shared_by_fkey"
+            columns: ["shared_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_videos: {
         Row: {
           created_at: string
@@ -609,6 +976,132 @@ export type Database = {
         }
         Relationships: []
       }
+      share_events: {
+        Row: {
+          created_at: string
+          event: Database["public"]["Enums"]["share_event_type"]
+          id: string
+          meta: Json | null
+          property_id: string | null
+          share_id: string
+        }
+        Insert: {
+          created_at?: string
+          event: Database["public"]["Enums"]["share_event_type"]
+          id?: string
+          meta?: Json | null
+          property_id?: string | null
+          share_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: Database["public"]["Enums"]["share_event_type"]
+          id?: string
+          meta?: Json | null
+          property_id?: string | null
+          share_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_events_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "property_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_visits: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          feedback: string | null
+          id: string
+          lead_id: string | null
+          meeting_point: string | null
+          notes: string | null
+          property_id: string | null
+          scheduled_at: string
+          status: Database["public"]["Enums"]["visit_status"]
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          feedback?: string | null
+          id?: string
+          lead_id?: string | null
+          meeting_point?: string | null
+          notes?: string | null
+          property_id?: string | null
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["visit_status"]
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          feedback?: string | null
+          id?: string
+          lead_id?: string | null
+          meeting_point?: string | null
+          notes?: string | null
+          property_id?: string | null
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["visit_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_visits_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_visits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -713,6 +1206,7 @@ export type Database = {
     }
     Functions: {
       get_published_property: { Args: { p_slug: string }; Returns: Json }
+      get_share_bundle: { Args: { p_token: string }; Returns: Json }
       list_published_property_cards: {
         Args: {
           p_city?: string
@@ -728,10 +1222,30 @@ export type Database = {
           slug: string
         }[]
       }
+      record_share_event: {
+        Args: {
+          p_event: Database["public"]["Enums"]["share_event_type"]
+          p_meta?: Json
+          p_property_id?: string
+          p_token: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "agent"
       area_unit: "sqft" | "sqyard" | "acre"
+      customer_intent: "buy" | "rent" | "lease" | "invest"
+      customer_priority: "low" | "medium" | "high" | "vip"
+      customer_status:
+        | "new"
+        | "active"
+        | "following_up"
+        | "negotiating"
+        | "converted"
+        | "inactive"
+        | "lost"
+      demand_level: "low" | "moderate" | "high" | "very_high"
       facing_type:
         | "north"
         | "south"
@@ -778,8 +1292,25 @@ export type Database = {
         | "office_space"
         | "warehouse"
         | "farm_house"
+      share_channel: "whatsapp" | "email" | "sms" | "link" | "qr"
+      share_event_type:
+        | "sent"
+        | "delivered"
+        | "opened"
+        | "viewed"
+        | "favourite"
+        | "brochure_downloaded"
+        | "enquiry"
+        | "visit_booked"
+        | "reshared"
       task_priority: "low" | "medium" | "high"
       task_status: "open" | "in_progress" | "done"
+      visit_status:
+        | "scheduled"
+        | "completed"
+        | "cancelled"
+        | "rescheduled"
+        | "no_show"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -909,6 +1440,18 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "manager", "agent"],
       area_unit: ["sqft", "sqyard", "acre"],
+      customer_intent: ["buy", "rent", "lease", "invest"],
+      customer_priority: ["low", "medium", "high", "vip"],
+      customer_status: [
+        "new",
+        "active",
+        "following_up",
+        "negotiating",
+        "converted",
+        "inactive",
+        "lost",
+      ],
+      demand_level: ["low", "moderate", "high", "very_high"],
       facing_type: [
         "north",
         "south",
@@ -960,8 +1503,27 @@ export const Constants = {
         "warehouse",
         "farm_house",
       ],
+      share_channel: ["whatsapp", "email", "sms", "link", "qr"],
+      share_event_type: [
+        "sent",
+        "delivered",
+        "opened",
+        "viewed",
+        "favourite",
+        "brochure_downloaded",
+        "enquiry",
+        "visit_booked",
+        "reshared",
+      ],
       task_priority: ["low", "medium", "high"],
       task_status: ["open", "in_progress", "done"],
+      visit_status: [
+        "scheduled",
+        "completed",
+        "cancelled",
+        "rescheduled",
+        "no_show",
+      ],
     },
   },
 } as const
