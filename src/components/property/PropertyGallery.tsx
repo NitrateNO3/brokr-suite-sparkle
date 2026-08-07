@@ -29,6 +29,8 @@ function Placeholder({ className }: { className?: string }) {
  * Premium listing gallery: hero image, thumbnail strip, keyboard navigation and
  * a fullscreen lightbox. Images below the fold are lazy-loaded.
  */
+const NON_IMAGE = /\.(mp4|webm|mov|m4v|avi|pdf|doc|docx)(\?|$)/i;
+
 export function PropertyGallery({
   images,
   cover,
@@ -56,8 +58,13 @@ export function PropertyGallery({
 
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
+  const [broken, setBroken] = useState<string[]>([]);
 
-  const total = ordered.length;
+  const usable = useMemo(
+    () => ordered.filter((i) => !NON_IMAGE.test(i.url) && !broken.includes(i.url)),
+    [ordered, broken],
+  );
+  const total = usable.length;
   const step = useCallback(
     (delta: number) => setActive((current) => (total ? (current + delta + total) % total : 0)),
     [total],
@@ -80,7 +87,7 @@ export function PropertyGallery({
 
   if (!total) return <Placeholder className="h-72 w-full md:h-[26rem]" />;
 
-  const current = ordered[Math.min(active, total - 1)]!;
+  const current = usable[Math.min(active, total - 1)]!;
 
   return (
     <div className="space-y-3">
@@ -91,6 +98,7 @@ export function PropertyGallery({
           loading="eager"
           fetchPriority="high"
           decoding="async"
+          onError={() => setBroken((prev) => [...prev, current.url])}
           className="h-72 w-full cursor-zoom-in object-cover transition-transform duration-500 md:h-[28rem]"
           onClick={() => setOpen(true)}
         />
@@ -134,7 +142,7 @@ export function PropertyGallery({
 
       {total > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {ordered.map((image, index) => (
+          {usable.map((image, index) => (
             <button
               key={image.url}
               type="button"
@@ -153,6 +161,7 @@ export function PropertyGallery({
                 alt={image.alt ?? `${title} thumbnail ${index + 1}`}
                 loading="lazy"
                 decoding="async"
+                onError={() => setBroken((prev) => [...prev, image.url])}
                 className="h-full w-full object-cover"
               />
             </button>
