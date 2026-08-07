@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Building2,
   Copy,
+  CopyPlus,
   Crown,
   Eye,
   EyeOff,
@@ -232,7 +233,7 @@ export function PropertyCard({
             <Copy className="h-4 w-4" />
           </IconAction>
           <IconAction label="Duplicate Property" onClick={onDuplicate}>
-            <Images className="h-4 w-4" />
+            <CopyPlus className="h-4 w-4" />
           </IconAction>
           <IconAction label="Edit Property" asChild>
             <Link to="/properties/$id/edit" params={{ id: property.id }}>
