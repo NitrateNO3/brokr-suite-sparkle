@@ -107,10 +107,13 @@ export function MediaManager({
   propertyId,
   coverImage,
   onCoverChange,
+  only,
 }: {
   propertyId: string;
   coverImage: string | null;
   onCoverChange: (url: string) => void;
+  /** Restrict the workspace to a subset of tabs, e.g. ["docs"]. */
+  only?: readonly ("photos" | "floor" | "360" | "videos" | "docs")[];
 }) {
   const { data: images, isLoading } = usePropertyImagesQuery(propertyId);
   const qc = useQueryClient();
