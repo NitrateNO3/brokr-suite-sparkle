@@ -107,10 +107,13 @@ export function MediaManager({
   propertyId,
   coverImage,
   onCoverChange,
+  only,
 }: {
   propertyId: string;
   coverImage: string | null;
   onCoverChange: (url: string) => void;
+  /** Restrict the workspace to a subset of tabs, e.g. ["docs"]. */
+  only?: readonly ("photos" | "floor" | "360" | "videos" | "docs")[];
 }) {
   const { data: images, isLoading } = usePropertyImagesQuery(propertyId);
   const qc = useQueryClient();
@@ -353,20 +356,33 @@ export function MediaManager({
   };
 
   const busy = uploads.length > 0;
+  const show = (tab: "photos" | "floor" | "360" | "videos" | "docs") =>
+    !only || only.includes(tab);
 
   return (
     <div className="space-y-4">
-      <NativeMediaSourceButtons onFiles={(picked) => void uploadImages(picked, "photo")} />
+      {show("photos") && (
+        <NativeMediaSourceButtons onFiles={(picked) => void uploadImages(picked, "photo")} />
+      )}
       <UploadList uploads={uploads} />
 
-      <Tabs defaultValue="photos">
+      <Tabs defaultValue={only?.[0] ?? "photos"}>
         <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1">
-          <TabsTrigger value="photos">Photos ({byKind.photo.length})</TabsTrigger>
-          <TabsTrigger value="floor">Floor plans ({byKind.floor_plan.length})</TabsTrigger>
-          <TabsTrigger value="360">360° ({byKind["360"].length})</TabsTrigger>
-          <TabsTrigger value="videos">Videos ({videos.data?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="docs">Documents ({documents.data?.length ?? 0})</TabsTrigger>
+          {show("photos") && (
+            <TabsTrigger value="photos">Photos ({byKind.photo.length})</TabsTrigger>
+          )}
+          {show("floor") && (
+            <TabsTrigger value="floor">Floor plans ({byKind.floor_plan.length})</TabsTrigger>
+          )}
+          {show("360") && <TabsTrigger value="360">360° ({byKind["360"].length})</TabsTrigger>}
+          {show("videos") && (
+            <TabsTrigger value="videos">Videos ({videos.data?.length ?? 0})</TabsTrigger>
+          )}
+          {show("docs") && (
+            <TabsTrigger value="docs">Documents ({documents.data?.length ?? 0})</TabsTrigger>
+          )}
         </TabsList>
+
 
         <TabsContent value="photos" className="mt-4 space-y-4">
           <DropZone
