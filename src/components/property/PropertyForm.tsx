@@ -4,12 +4,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { QRCodeCanvas } from "qrcode.react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Copy,
   ExternalLink,
+  Eye,
+  FileText,
   Loader2,
+  MapPin,
   Rocket,
   Save,
   Wand2,
@@ -21,18 +26,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import { MultiSelectChips } from "@/components/shared/MultiSelectChips";
+import { Badge } from "@/components/ui/badge";
 import { RichTextEditor } from "@/components/property/RichTextEditor";
 import { MediaManager } from "@/components/property/MediaManager";
 import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
 import { SearchableSelect } from "@/components/property/SearchableSelect";
+import { ChoiceCard, CATEGORY_CARDS, PURPOSE_CARDS } from "@/components/property/wizard/PurposeCards";
+import { AmenityPicker } from "@/components/property/wizard/AmenityPicker";
+import { EmiCalculator } from "@/components/property/wizard/EmiCalculator";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
 import { friendlyError } from "@/lib/errors";
 import { isConnected } from "@/lib/native/network";
 import { saveDraft } from "@/lib/offline-drafts";
 import {
-  AMENITY_LIST,
   AREA_UNITS,
   CITIES,
   FACINGS,
@@ -41,7 +48,6 @@ import {
   PROPERTY_AGES,
   PROPERTY_FLAGS,
   PROPERTY_TYPES,
-  PURPOSES,
   STATUSES,
   labelFor,
 } from "@/lib/constants";
@@ -137,23 +143,23 @@ export type PropertyFormValues = z.infer<typeof schema>;
 const DRAFT_KEY = "brokrsuite-property-draft";
 
 const STEPS = [
-  { id: "basics", label: "Basic information" },
-  { id: "pricing", label: "Pricing" },
-  { id: "location", label: "Location" },
-  { id: "details", label: "Property details" },
-  { id: "amenities", label: "Amenities" },
-  { id: "media", label: "Media upload" },
-  { id: "seo", label: "SEO & sharing" },
-  { id: "agent", label: "Assign agent" },
-  { id: "preview", label: "Preview" },
-  { id: "publish", label: "Publish" },
+  { id: "purpose", label: "Purpose", caption: "What are you listing?" },
+  { id: "basics", label: "Basic details", caption: "Name, story and identity" },
+  { id: "location", label: "Location", caption: "Where the property sits" },
+  { id: "pricing", label: "Pricing", caption: "Ask, charges and EMI" },
+  { id: "specs", label: "Specifications", caption: "Configuration and area" },
+  { id: "amenities", label: "Amenities", caption: "What buyers get" },
+  { id: "media", label: "Photos & videos", caption: "Show it beautifully" },
+  { id: "documents", label: "Documents", caption: "Papers and approvals" },
+  { id: "seo", label: "SEO & sharing", caption: "Reach and visibility" },
+  { id: "publish", label: "Preview & publish", caption: "Final check" },
 ] as const;
 
 const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
-  0: ["title", "slug", "property_type", "purpose", "status"],
-  1: ["price"],
+  0: ["property_type", "purpose"],
+  1: ["title", "slug"],
   2: ["city"],
-  3: [],
+  3: ["price"],
   4: [],
   5: [],
   6: [],
@@ -164,6 +170,7 @@ const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
 
 const RESIDENTIAL = ["apartment", "builder_floor", "villa", "independent_house", "penthouse"];
 const LAND = ["plot", "farm_house"];
+const COMMERCIAL = ["commercial", "retail_shop", "office_space", "warehouse"];
 
 function defaults(property?: Property | null): PropertyFormValues {
   return {
@@ -236,14 +243,16 @@ function Field({
   children,
   hint,
   error,
+  className,
 }: {
   label: string;
   children: React.ReactNode;
   hint?: string | undefined;
   error?: string | undefined;
+  className?: string;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className={cn("space-y-1.5", className)}>
       <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </Label>
@@ -254,6 +263,28 @@ function Field({
         <p className="text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>
+  );
+}
+
+function StepShell({
+  title,
+  description,
+  children,
+  className,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className="surface animate-fade-in space-y-6 p-6 md:p-8">
+      <header className="space-y-1">
+        <h2 className="display-title text-xl md:text-2xl">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </header>
+      <div className={className}>{children}</div>
+    </section>
   );
 }
 
@@ -324,8 +355,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
   const type = values.property_type;
   const isLand = LAND.includes(type);
   const isResidential = RESIDENTIAL.includes(type);
-  const showRooms = isResidential;
-  const showFloors = !isLand;
+  const isCommercial = COMMERCIAL.includes(type);
 
   const sectorOptions = useMemo(
     () =>
@@ -350,6 +380,23 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }, [values, pendingFiles.length]);
+
+  const publicUrl = useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/property/${values.slug || ""}`;
+  }, [values.slug]);
+
+  const mapSrc = useMemo(() => {
+    if (values.latitude && values.longitude) {
+      return `https://www.google.com/maps?q=${values.latitude},${values.longitude}&z=15&output=embed`;
+    }
+    const query = [values.address, values.sector, values.city, values.pin_code]
+      .filter(Boolean)
+      .join(", ");
+    return query
+      ? `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=14&output=embed`
+      : null;
+  }, [values.latitude, values.longitude, values.address, values.sector, values.city, values.pin_code]);
 
   const persist = async (overrides: Partial<PropertyFormValues> = {}) => {
     const valid = await trigger();
@@ -429,6 +476,11 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     }
   };
 
+  const goTo = (index: number) => {
+    setStep(Math.min(Math.max(index, 0), STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const next = async () => {
     const fields = STEP_FIELDS[step] ?? [];
     const ok = fields.length ? await trigger(fields) : true;
@@ -436,13 +488,7 @@ export function PropertyForm({ property }: { property?: Property | null }) {
       toast.error("Please complete this step first");
       return;
     }
-    setStep((s) => Math.min(s + 1, STEPS.length - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const back = () => {
-    setStep((s) => Math.max(s - 1, 0));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    goTo(step + 1);
   };
 
   const pending = create.isPending || update.isPending || uploading;
@@ -452,32 +498,76 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     values.area_unit,
   );
 
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(publicUrl);
+    toast.success("Public link copied");
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="surface space-y-3 p-4">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+    <div className="space-y-6 pb-4">
+      {/* Sticky header */}
+      <div className="glass sticky top-0 z-30 -mx-4 space-y-3 border-b px-4 py-3 md:-mx-6 md:px-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Back to inventory"
+            onClick={() => navigate({ to: "/properties" })}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
-              Step {step + 1} of {STEPS.length} · {STEPS[step]!.label}
+            <p className="truncate text-sm font-semibold">
+              {values.title || "New listing"}
+              <Badge variant="secondary" className="ml-2 align-middle text-[10px]">
+                {property ? property.property_code : values.property_code}
+              </Badge>
             </p>
             <p className="text-xs text-muted-foreground">
-              {property ? property.property_code : values.property_code} ·{" "}
-              {savedAt ? `Draft auto-saved at ${savedAt}` : "Changes are auto-saved locally"}
+              Step {step + 1} of {STEPS.length} · {STEPS[step]!.label} ·{" "}
+              {savedAt ? `auto-saved ${savedAt}` : "auto-saving locally"}
             </p>
           </div>
-          <span className="shrink-0 text-sm font-semibold text-primary">{completion}% complete</span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="hidden text-sm font-semibold text-primary sm:inline">
+              {completion}%
+            </span>
+            <Button type="button" variant="outline" size="sm" onClick={() => void persist()} disabled={pending}>
+              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span className="hidden sm:inline">Save draft</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+              onClick={() => goTo(9)}
+            >
+              <Eye className="h-4 w-4" /> Preview
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={pending}
+              onClick={() => void persist({ is_published: true, status: "available" })}
+            >
+              <Rocket className="h-4 w-4" />
+              <span className="hidden sm:inline">Publish</span>
+            </Button>
+          </div>
         </div>
         <Progress value={((step + 1) / STEPS.length) * 100} className="h-1.5" />
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
           {STEPS.map((s, index) => (
             <button
               key={s.id}
               type="button"
-              onClick={() => setStep(index)}
+              onClick={() => goTo(index)}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition",
+                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all",
                 index === step
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : index < step
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:bg-muted",
@@ -494,175 +584,276 @@ export function PropertyForm({ property }: { property?: Property | null }) {
         </div>
       </div>
 
-      {/* Step 1 — Basic information */}
+      {/* Step 1 — Purpose & category */}
       {step === 0 && (
-        <div className="surface space-y-5 p-5">
+        <StepShell
+          title="What are you listing?"
+          description="Pick the purpose and the category — the rest of the wizard adapts to your choice."
+          className="space-y-8"
+        >
+          <div className="space-y-3">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Purpose
+            </Label>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {PURPOSE_CARDS.map((item) => (
+                <ChoiceCard
+                  key={item.value}
+                  label={item.label}
+                  hint={item.hint}
+                  icon={item.icon}
+                  selected={values.purpose === item.value}
+                  onSelect={() => setValue("purpose", item.value, { shouldDirty: true })}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Property category
+            </Label>
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {CATEGORY_CARDS.map((item) => (
+                <ChoiceCard
+                  key={item.value}
+                  label={item.label}
+                  icon={item.icon}
+                  selected={values.property_type === item.value}
+                  onSelect={() => setValue("property_type", item.value, { shouldDirty: true })}
+                />
+              ))}
+            </div>
+          </div>
+        </StepShell>
+      )}
+
+      {/* Step 2 — Basic details */}
+      {step === 1 && (
+        <StepShell
+          title="Basic details"
+          description="Name the property and tell its story. The code and URL are generated for you."
+          className="space-y-6"
+        >
           <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Property title" error={errors.title?.message}>
-              <Input {...register("title")} placeholder="Luxury 4BHK Villa in Sector 56" />
+            <Field label="Property name" error={errors.title?.message}>
+              <Input
+                {...register("title")}
+                className="h-11"
+                placeholder="Luxury 4BHK Villa in Sector 56"
+              />
             </Field>
             <Field label="Property ID" hint="Generated automatically">
-              <Input {...register("property_code")} readOnly className="bg-muted/60" />
+              <Input {...register("property_code")} readOnly className="h-11 bg-muted/60" />
             </Field>
             <Field
-              label="Slug"
-              hint="Used for the public URL /property/…"
+              label="Public URL slug"
+              hint="Used for /property/…"
               error={errors.slug?.message}
             >
               <div className="flex gap-2">
-                <Input {...register("slug")} placeholder="luxury-4bhk-villa-sector-56" />
-                <Button type="button" variant="secondary" onClick={autoSlug}>
+                <Input {...register("slug")} className="h-11" placeholder="luxury-4bhk-villa-sector-56" />
+                <Button type="button" variant="secondary" className="h-11" onClick={autoSlug}>
                   <Wand2 className="h-4 w-4" /> Auto
                 </Button>
               </div>
             </Field>
-            <Field label="Property type">
+            <Field label="Builder / project name" hint="Optional — shown on the public page">
+              <Input {...register("builder")} className="h-11" placeholder="DLF, M3M, Godrej…" />
+            </Field>
+            <Field label="Property age / possession">
               <SearchableSelect
-                options={PROPERTY_TYPES}
-                value={values.property_type}
-                onChange={(v) => setValue("property_type", v, { shouldDirty: true })}
+                options={PROPERTY_AGES}
+                value={values.age ?? ""}
+                clearable
+                onChange={(v) => setValue("age", v, { shouldDirty: true })}
               />
             </Field>
-            <Field label="Purpose">
-              <SearchableSelect
-                options={PURPOSES}
-                value={values.purpose}
-                onChange={(v) => setValue("purpose", v, { shouldDirty: true })}
-              />
-            </Field>
-            <Field label="Status">
+            <Field label="Listing status">
               <SearchableSelect
                 options={STATUSES}
                 value={values.status}
                 onChange={(v) => setValue("status", v, { shouldDirty: true })}
               />
             </Field>
-            <Field label="Builder / developer" hint="Optional — shown on the public page">
-              <Input {...register("builder")} placeholder="DLF, M3M, Godrej…" />
-            </Field>
           </div>
-          <Field label="Description">
+          <Field label="Description & highlights" hint="Lead with what makes this property special.">
             <RichTextEditor
               value={values.description ?? ""}
               onChange={(html) => setValue("description", html, { shouldDirty: true })}
             />
           </Field>
-        </div>
-      )}
-
-      {/* Step 2 — Pricing */}
-      {step === 1 && (
-        <div className="surface grid gap-5 p-5 md:grid-cols-2">
-          <Field
-            label="Expected price (₹)"
-            hint={Number(values.price) > 0 ? formatPrice(Number(values.price)) : undefined}
-            error={errors.price?.message}
-          >
-            <Input type="number" inputMode="numeric" {...register("price")} />
-          </Field>
-          <div className="flex items-end gap-3 pb-2">
-            <Switch
-              id="negotiable"
-              checked={values.negotiable}
-              onCheckedChange={(v) => setValue("negotiable", v, { shouldDirty: true })}
-            />
-            <Label htmlFor="negotiable">Price is negotiable</Label>
-          </div>
-          <Field label="Maintenance charges (₹)">
-            <Input type="number" {...register("maintenance_charges")} />
-          </Field>
-          <Field label="Booking amount (₹)">
-            <Input type="number" {...register("booking_amount")} />
-          </Field>
-          {values.purpose !== "sale" && (
-            <Field label="Security deposit (₹)">
-              <Input type="number" {...register("security_deposit")} />
-            </Field>
-          )}
-          {rate && (
-            <div className="surface col-span-full bg-muted/40 p-4 text-sm">
-              Rate works out to <span className="font-semibold">{rate}</span>
-            </div>
-          )}
-        </div>
+        </StepShell>
       )}
 
       {/* Step 3 — Location */}
       {step === 2 && (
-        <div className="surface grid gap-5 p-5 md:grid-cols-2">
-          <Field label="City" error={errors.city?.message}>
-            <SearchableSelect
-              options={CITIES.map((c) => ({ value: c, label: c }))}
-              value={values.city}
-              allowCustom
-              onChange={(v) => {
-                setValue("city", v, { shouldDirty: true });
-                setValue("sector", "", { shouldDirty: true });
-              }}
-            />
-          </Field>
-          <Field
-            label="Sector / locality"
-            hint={sectorOptions.length ? "Type to search" : "Free text for this city"}
-          >
-            <SearchableSelect
-              options={sectorOptions}
-              value={values.sector ?? ""}
-              allowCustom
-              clearable
-              placeholder="Select or type a locality"
-              onChange={(v) => setValue("sector", v, { shouldDirty: true })}
-            />
-          </Field>
-          <Field label="Address">
-            <Input {...register("address")} />
-          </Field>
-          <Field label="Landmark">
-            <Input {...register("landmark")} />
-          </Field>
-          <Field label="Pin code">
-            <Input inputMode="numeric" maxLength={6} {...register("pin_code")} />
-          </Field>
-          <Field label="Google Maps URL">
-            <Input {...register("maps_url")} placeholder="https://maps.google.com/…" />
-          </Field>
-          <Field label="Latitude">
-            <Input type="number" step="any" {...register("latitude")} />
-          </Field>
-          <Field label="Longitude">
-            <Input type="number" step="any" {...register("longitude")} />
-          </Field>
-        </div>
+        <StepShell
+          title="Location"
+          description="Add the address — the live map preview updates as you type."
+          className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"
+        >
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="City" error={errors.city?.message}>
+              <SearchableSelect
+                options={CITIES.map((c) => ({ value: c, label: c }))}
+                value={values.city}
+                allowCustom
+                onChange={(v) => {
+                  setValue("city", v, { shouldDirty: true });
+                  setValue("sector", "", { shouldDirty: true });
+                }}
+              />
+            </Field>
+            <Field
+              label="Sector / locality"
+              hint={sectorOptions.length ? "Type to search" : "Free text for this city"}
+            >
+              <SearchableSelect
+                options={sectorOptions}
+                value={values.sector ?? ""}
+                allowCustom
+                clearable
+                placeholder="Select or type a locality"
+                onChange={(v) => setValue("sector", v, { shouldDirty: true })}
+              />
+            </Field>
+            <Field label="Street address" className="sm:col-span-2">
+              <Input {...register("address")} className="h-11" placeholder="Tower B, Golf Course Extension Road" />
+            </Field>
+            <Field label="Nearby landmarks" hint="Metro, schools, hospitals, markets">
+              <Input {...register("landmark")} className="h-11" placeholder="500m from Sector 55-56 metro" />
+            </Field>
+            <Field label="Pin code">
+              <Input inputMode="numeric" maxLength={6} className="h-11" {...register("pin_code")} />
+            </Field>
+            <Field label="Latitude">
+              <Input type="number" step="any" className="h-11" {...register("latitude")} />
+            </Field>
+            <Field label="Longitude">
+              <Input type="number" step="any" className="h-11" {...register("longitude")} />
+            </Field>
+            <Field label="Google Maps URL" className="sm:col-span-2">
+              <Input {...register("maps_url")} className="h-11" placeholder="https://maps.google.com/…" />
+            </Field>
+          </div>
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-2xl border border-border bg-muted/40">
+              {mapSrc ? (
+                <iframe
+                  title="Location preview"
+                  src={mapSrc}
+                  loading="lazy"
+                  className="h-72 w-full border-0"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              ) : (
+                <div className="grid h-72 place-items-center text-center text-sm text-muted-foreground">
+                  <span>
+                    <MapPin className="mx-auto mb-2 h-6 w-6" />
+                    Add an address or coordinates to see the map
+                  </span>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {locationLine(values.city, values.sector)}
+            </p>
+          </div>
+        </StepShell>
       )}
 
-      {/* Step 4 — Property details */}
+      {/* Step 4 — Pricing */}
       {step === 3 && (
-        <div className="surface grid gap-5 p-5 md:grid-cols-3">
-          {showRooms && (
+        <StepShell
+          title="Pricing"
+          description="Set the ask and the associated charges. Buyers see an instant EMI estimate."
+          className="space-y-6"
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+              <Field label="Expected price (₹)" error={errors.price?.message}>
+                <Input type="number" inputMode="numeric" className="h-12 text-lg" {...register("price")} />
+              </Field>
+              <p className="mt-2 text-sm font-semibold text-primary">
+                {Number(values.price) > 0 ? formatPrice(Number(values.price)) : "—"}
+              </p>
+              <label className="mt-3 flex items-center gap-2 text-sm">
+                <Switch
+                  checked={values.negotiable}
+                  onCheckedChange={(v) => setValue("negotiable", v, { shouldDirty: true })}
+                />
+                Negotiable
+              </label>
+            </div>
+            <div className="rounded-2xl border border-border p-5">
+              <Field label="Maintenance (₹ / month)">
+                <Input type="number" className="h-11" {...register("maintenance_charges")} />
+              </Field>
+              <div className="mt-4">
+                <Field label="Booking / token amount (₹)">
+                  <Input type="number" className="h-11" {...register("booking_amount")} />
+                </Field>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border p-5">
+              <Field label={values.purpose === "sale" ? "Registration charges (₹)" : "Security deposit (₹)"}>
+                <Input type="number" className="h-11" {...register("security_deposit")} />
+              </Field>
+              <div className="mt-4 rounded-xl bg-muted/50 p-3 text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Rate</p>
+                <p className="font-semibold">{rate ?? "Add area to compute"}</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border p-5">
+            <p className="mb-4 text-sm font-semibold">EMI calculator</p>
+            <EmiCalculator price={Number(values.price) || 0} />
+          </div>
+        </StepShell>
+      )}
+
+      {/* Step 5 — Specifications */}
+      {step === 4 && (
+        <StepShell
+          title="Specifications"
+          description={`Only the fields that matter for ${labelFor(PROPERTY_TYPES, values.property_type)} listings.`}
+          className="grid gap-5 md:grid-cols-3"
+        >
+          {isResidential && (
             <>
-              <Field label="Bedrooms">
-                <Input type="number" {...register("bedrooms")} />
+              <Field label="Bedrooms (BHK)">
+                <Input type="number" className="h-11" {...register("bedrooms")} />
               </Field>
               <Field label="Bathrooms">
-                <Input type="number" {...register("bathrooms")} />
+                <Input type="number" className="h-11" {...register("bathrooms")} />
               </Field>
               <Field label="Balconies">
-                <Input type="number" {...register("balconies")} />
+                <Input type="number" className="h-11" {...register("balconies")} />
+              </Field>
+            </>
+          )}
+          {isCommercial && (
+            <>
+              <Field label="Cabins / rooms">
+                <Input type="number" className="h-11" {...register("bedrooms")} />
+              </Field>
+              <Field label="Washrooms">
+                <Input type="number" className="h-11" {...register("bathrooms")} />
               </Field>
             </>
           )}
           {!isLand && (
-            <Field label="Parking">
-              <Input type="number" {...register("parking")} />
+            <Field label="Car parking">
+              <Input type="number" className="h-11" {...register("parking")} />
             </Field>
           )}
-          {showFloors && (
+          {!isLand && (
             <>
-              <Field label="Floor">
-                <Input type="number" {...register("floor_no")} />
+              <Field label="Floor number">
+                <Input type="number" className="h-11" {...register("floor_no")} />
               </Field>
               <Field label="Total floors">
-                <Input type="number" {...register("total_floors")} />
+                <Input type="number" className="h-11" {...register("total_floors")} />
               </Field>
             </>
           )}
@@ -674,30 +865,6 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               onChange={(v) => setValue("facing", v, { shouldDirty: true })}
             />
           </Field>
-          <Field label="Area unit">
-            <SearchableSelect
-              options={AREA_UNITS}
-              value={values.area_unit}
-              onChange={(v) => setValue("area_unit", v, { shouldDirty: true })}
-            />
-          </Field>
-          <Field label="Property age / availability">
-            <SearchableSelect
-              options={PROPERTY_AGES}
-              value={values.age ?? ""}
-              clearable
-              onChange={(v) => setValue("age", v, { shouldDirty: true })}
-            />
-          </Field>
-          <Field label={`Carpet area (${areaUnitLabel(values.area_unit)})`}>
-            <Input type="number" {...register("carpet_area")} />
-          </Field>
-          <Field label={`Built-up area (${areaUnitLabel(values.area_unit)})`}>
-            <Input type="number" {...register("builtup_area")} />
-          </Field>
-          <Field label={`Super area (${areaUnitLabel(values.area_unit)})`}>
-            <Input type="number" {...register("super_area")} />
-          </Field>
           {!isLand && (
             <Field label="Furnishing">
               <SearchableSelect
@@ -708,54 +875,51 @@ export function PropertyForm({ property }: { property?: Property | null }) {
               />
             </Field>
           )}
-        </div>
-      )}
-
-      {/* Step 5 — Amenities */}
-      {step === 4 && (
-        <div className="surface space-y-4 p-5">
-          <Field label="Amenities" hint="Search, or click the quick picks below">
-            <MultiSelectChips
-              options={AMENITY_LIST}
-              value={values.amenities}
-              onChange={(nextValue) => setValue("amenities", nextValue, { shouldDirty: true })}
-              placeholder="Search and select amenities"
+          <Field label="Area unit">
+            <SearchableSelect
+              options={AREA_UNITS}
+              value={values.area_unit}
+              onChange={(v) => setValue("area_unit", v, { shouldDirty: true })}
             />
           </Field>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: "Family essentials", picks: ["Lift", "Power Backup", "24x7 Security", "Visitor Parking"] },
-              { label: "Luxury pack", picks: ["Swimming Pool", "Gym", "Club House", "Modular Kitchen"] },
-              { label: "Green living", picks: ["Garden", "Jogging Track", "Kids Play Area", "Pet Friendly"] },
-            ].map((preset) => (
-              <Button
-                key={preset.label}
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  setValue(
-                    "amenities",
-                    Array.from(new Set([...(values.amenities ?? []), ...preset.picks])),
-                    { shouldDirty: true },
-                  )
-                }
-              >
-                + {preset.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+          <Field label={isLand ? `Plot area (${areaUnitLabel(values.area_unit)})` : `Carpet area (${areaUnitLabel(values.area_unit)})`}>
+            <Input type="number" className="h-11" {...register("carpet_area")} />
+          </Field>
+          <Field label={`Built-up area (${areaUnitLabel(values.area_unit)})`}>
+            <Input type="number" className="h-11" {...register("builtup_area")} />
+          </Field>
+          <Field label={`Super area (${areaUnitLabel(values.area_unit)})`}>
+            <Input type="number" className="h-11" {...register("super_area")} />
+          </Field>
+        </StepShell>
       )}
 
-      {/* Step 6 — Media */}
+      {/* Step 6 — Amenities */}
       {step === 5 && (
-        <div className="surface space-y-5 p-5">
+        <StepShell
+          title="Amenities"
+          description="Search or tap the cards. Popular picks appear first."
+        >
+          <AmenityPicker
+            value={values.amenities ?? []}
+            onChange={(next) => setValue("amenities", next, { shouldDirty: true })}
+          />
+        </StepShell>
+      )}
+
+      {/* Step 7 — Photos & videos */}
+      {step === 6 && (
+        <StepShell
+          title="Photos & videos"
+          description="Drag & drop images, reorder them and pick a cover. Files are compressed automatically."
+          className="space-y-6"
+        >
           {property ? (
             <MediaManager
               propertyId={property.id}
               coverImage={values.cover_image ?? null}
               onCoverChange={(url: string) => setValue("cover_image", url, { shouldDirty: true })}
+              only={["photos", "floor", "360", "videos"]}
             />
           ) : (
             <PendingMediaPicker
@@ -767,226 +931,273 @@ export function PropertyForm({ property }: { property?: Property | null }) {
           )}
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="YouTube link">
-              <Input {...register("youtube_url")} placeholder="https://youtube.com/watch?v=…" />
+              <Input {...register("youtube_url")} className="h-11" placeholder="https://youtube.com/watch?v=…" />
             </Field>
             <Field label="360° / virtual tour link">
-              <Input {...register("virtual_tour_url")} placeholder="https://…" />
+              <Input {...register("virtual_tour_url")} className="h-11" placeholder="https://…" />
             </Field>
           </div>
-        </div>
+        </StepShell>
       )}
 
-      {/* Step 7 — SEO & sharing */}
-      {step === 6 && (
-        <div className="space-y-5">
-          <div className="surface space-y-5 p-5">
+      {/* Step 8 — Documents */}
+      {step === 7 && (
+        <StepShell
+          title="Documents"
+          description="Registry, RERA, NOC, tax receipts, brochures and floor plans — stored privately."
+          className="space-y-4"
+        >
+          {property ? (
+            <MediaManager
+              propertyId={property.id}
+              coverImage={values.cover_image ?? null}
+              onCoverChange={(url: string) => setValue("cover_image", url, { shouldDirty: true })}
+              only={["docs"]}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+              <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">Save the listing first to attach documents</p>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Documents are linked to the saved property record.
+              </p>
+              <Button type="button" variant="outline" onClick={() => void persist()} disabled={pending}>
+                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Save draft now
+              </Button>
+            </div>
+          )}
+        </StepShell>
+      )}
+
+      {/* Step 9 — SEO & sharing */}
+      {step === 8 && (
+        <div className="space-y-6">
+          <StepShell
+            title="SEO & discoverability"
+            description="How this listing appears on Google and in link previews."
+            className="space-y-5"
+          >
             <div className="grid gap-5 md:grid-cols-2">
               <Field label="Meta title" hint="Defaults to the listing title">
-                <Input {...register("meta_title")} />
+                <Input {...register("meta_title")} className="h-11" />
               </Field>
               <Field label="Keywords">
-                <Input {...register("keywords")} placeholder="villa, sector 56, gurgaon" />
+                <Input {...register("keywords")} className="h-11" placeholder="villa, sector 56, gurgaon" />
               </Field>
             </div>
             <Field label="Meta description">
               <Textarea rows={3} {...register("meta_description")} />
             </Field>
-          </div>
+            <Field label="Open Graph image" hint="Uses the cover photo of this listing">
+              <Input {...register("cover_image")} className="h-11" placeholder="https://…" />
+            </Field>
+          </StepShell>
 
-          <div className="surface space-y-4 p-5">
-            <div>
-              <p className="display-title text-lg">What clients see on the shared link</p>
-              <p className="text-sm text-muted-foreground">
-                Turn anything off to hide it from the public property page. Your internal records
-                always keep the full details.
-              </p>
+          <StepShell
+            title="Share link & QR"
+            description="Give clients a scannable link the moment the listing is published."
+            className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto]"
+          >
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input readOnly value={publicUrl} className="h-11 text-xs" aria-label="Public link" />
+                <Button type="button" variant="secondary" className="h-11" onClick={() => void copyLink()}>
+                  <Copy className="h-4 w-4" /> Copy
+                </Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SHARE_FIELDS.map((field) => (
+                  <label
+                    key={field.key}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                  >
+                    <span>
+                      <span className="text-sm font-medium">{field.label}</span>
+                      <span className="block text-xs text-muted-foreground">{field.hint}</span>
+                    </span>
+                    <Switch
+                      checked={Boolean(values[field.key])}
+                      onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
+                    />
+                  </label>
+                ))}
+              </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {SHARE_FIELDS.map((field) => (
+            <div className="justify-self-center rounded-2xl border border-border bg-background p-4">
+              <QRCodeCanvas value={publicUrl} size={148} includeMargin />
+            </div>
+          </StepShell>
+
+          <StepShell
+            title="Listing badges & owner"
+            description="Highlight the listing and assign the responsible teammate."
+            className="space-y-5"
+          >
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {PROPERTY_FLAGS.map((flag) => (
                 <label
-                  key={field.key}
-                  className="flex items-start justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                  key={flag.key}
+                  className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
                 >
-                  <span>
-                    <span className="text-sm font-medium">{field.label}</span>
-                    <span className="block text-xs text-muted-foreground">{field.hint}</span>
-                  </span>
+                  <span className="text-sm">{flag.label}</span>
                   <Switch
-                    checked={Boolean(values[field.key])}
-                    onCheckedChange={(v) => setValue(field.key, v, { shouldDirty: true })}
+                    checked={Boolean(values[flag.key as keyof PropertyFormValues])}
+                    onCheckedChange={(v) =>
+                      setValue(flag.key as keyof PropertyFormValues, v as never, {
+                        shouldDirty: true,
+                      })
+                    }
                   />
                 </label>
               ))}
             </div>
-          </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <Field label="Assigned teammate">
+                <SearchableSelect
+                  options={(team ?? []).map((member) => ({
+                    value: member.id,
+                    label: member.full_name ?? member.email ?? "Teammate",
+                  }))}
+                  value={values.assigned_to ?? ""}
+                  clearable
+                  placeholder="Unassigned"
+                  onChange={(v) => setValue("assigned_to", v, { shouldDirty: true })}
+                />
+              </Field>
+              <Field label="Agent name">
+                <Input {...register("agent_name")} className="h-11" />
+              </Field>
+              <Field label="Phone">
+                <Input {...register("agent_phone")} className="h-11" />
+              </Field>
+              <Field label="WhatsApp">
+                <Input {...register("agent_whatsapp")} className="h-11" />
+              </Field>
+              <Field label="Email">
+                <Input type="email" {...register("agent_email")} className="h-11" />
+              </Field>
+              <Field label="Office address">
+                <Input {...register("agent_office")} className="h-11" />
+              </Field>
+            </div>
+          </StepShell>
         </div>
       )}
 
-      {/* Step 8 — Assign agent */}
-      {step === 7 && (
-        <div className="surface grid gap-5 p-5 md:grid-cols-2">
-          <Field label="Assigned teammate" hint="The team member responsible for this listing.">
-            <SearchableSelect
-              options={(team ?? []).map((member) => ({
-                value: member.id,
-                label: member.full_name ?? member.email ?? "Teammate",
-              }))}
-              value={values.assigned_to ?? ""}
-              clearable
-              placeholder="Unassigned"
-              onChange={(v) => setValue("assigned_to", v, { shouldDirty: true })}
-            />
-          </Field>
-          <Field label="Agent name">
-            <Input {...register("agent_name")} />
-          </Field>
-          <Field label="Phone">
-            <Input {...register("agent_phone")} />
-          </Field>
-          <Field label="WhatsApp">
-            <Input {...register("agent_whatsapp")} />
-          </Field>
-          <Field label="Email">
-            <Input type="email" {...register("agent_email")} />
-          </Field>
-          <Field label="Office address">
-            <Input {...register("agent_office")} />
-          </Field>
-        </div>
-      )}
-
-      {/* Step 9 — Preview */}
-      {step === 8 && (
-        <div className="surface overflow-hidden">
-          <div className="grid gap-0 md:grid-cols-[280px_minmax(0,1fr)]">
-            {values.cover_image ? (
-              <img
-                src={values.cover_image}
-                alt="Listing cover"
-                className="h-52 w-full object-cover md:h-full"
-              />
-            ) : (
-              <div className="grid h-52 place-items-center bg-muted text-xs text-muted-foreground md:h-full">
-                {pendingFiles.length
-                  ? `${pendingFiles.length} photo(s) ready to upload`
-                  : "No cover photo yet"}
-              </div>
-            )}
-            <div className="space-y-3 p-5">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                {values.property_code} · For {values.purpose} ·{" "}
-                {labelFor(PROPERTY_TYPES, values.property_type)}
-              </p>
-              <h2 className="display-title text-2xl">{values.title || "Untitled listing"}</h2>
-              <p className="text-sm text-muted-foreground">
-                {locationLine(values.city, values.sector)}
-              </p>
-              <p className="display-title text-2xl text-primary">
-                {Number(values.price) > 0 ? formatPrice(Number(values.price)) : "Price on request"}
-                {rate && <span className="ml-2 text-sm text-muted-foreground">{rate}</span>}
-              </p>
-              <div className="flex flex-wrap gap-2 text-xs">
-                {[
-                  values.bedrooms ? `${values.bedrooms} Beds` : null,
-                  values.bathrooms ? `${values.bathrooms} Baths` : null,
-                  values.super_area
-                    ? `${values.super_area} ${areaUnitLabel(values.area_unit)}`
-                    : null,
-                  values.facing ? labelFor(FACINGS, values.facing) : null,
-                  values.furnishing ? labelFor(FURNISHINGS, values.furnishing) : null,
-                ]
-                  .filter(Boolean)
-                  .map((chip) => (
-                    <span key={chip as string} className="rounded-full border border-border px-3 py-1">
-                      {chip}
+      {/* Step 10 — Preview & publish */}
+      {step === 9 && (
+        <div className="space-y-6">
+          <div className="surface animate-fade-in overflow-hidden">
+            <div className="grid gap-0 md:grid-cols-[320px_minmax(0,1fr)]">
+              {values.cover_image ? (
+                <img
+                  src={values.cover_image}
+                  alt={`${values.title || "Listing"} cover`}
+                  className="h-56 w-full object-cover md:h-full"
+                />
+              ) : (
+                <div className="grid h-56 place-items-center bg-muted text-xs text-muted-foreground md:h-full">
+                  {pendingFiles.length
+                    ? `${pendingFiles.length} photo(s) ready to upload`
+                    : "No cover photo yet"}
+                </div>
+              )}
+              <div className="space-y-3 p-6">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                  {values.property_code} · For {values.purpose} ·{" "}
+                  {labelFor(PROPERTY_TYPES, values.property_type)}
+                </p>
+                <h2 className="display-title text-2xl">{values.title || "Untitled listing"}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {locationLine(values.city, values.sector)}
+                </p>
+                <p className="display-title text-2xl text-primary">
+                  {values.share_show_price && Number(values.price) > 0
+                    ? formatPrice(Number(values.price))
+                    : "Price on request"}
+                  {rate && <span className="ml-2 text-sm text-muted-foreground">{rate}</span>}
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {[
+                    values.bedrooms ? `${values.bedrooms} Beds` : null,
+                    values.bathrooms ? `${values.bathrooms} Baths` : null,
+                    values.super_area
+                      ? `${values.super_area} ${areaUnitLabel(values.area_unit)}`
+                      : null,
+                    values.facing ? labelFor(FACINGS, values.facing) : null,
+                    values.furnishing ? labelFor(FURNISHINGS, values.furnishing) : null,
+                  ]
+                    .filter(Boolean)
+                    .map((chip) => (
+                      <span key={chip as string} className="rounded-full border border-border px-3 py-1">
+                        {chip}
+                      </span>
+                    ))}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(values.amenities ?? []).slice(0, 10).map((amenity) => (
+                    <span
+                      key={amenity}
+                      className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-secondary-foreground"
+                    >
+                      {amenity}
                     </span>
                   ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {values.agent_name} · {values.agent_phone}
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button type="button" size="sm" variant="outline" onClick={() => goTo(1)}>
+                    Edit details
+                  </Button>
+                  {property?.is_published && (
+                    <Button type="button" size="sm" variant="outline" asChild>
+                      <a href={`/property/${property.slug}`} target="_blank" rel="noreferrer">
+                        <ExternalLink className="h-4 w-4" /> Open public page
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {(values.amenities ?? []).slice(0, 8).map((amenity) => (
-                  <span
-                    key={amenity}
-                    className="rounded-full bg-secondary px-2.5 py-1 text-[11px] text-secondary-foreground"
-                  >
-                    {amenity}
-                  </span>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Public link: /property/{values.slug || "…"}
-              </p>
-              {property?.is_published && (
-                <Button type="button" variant="outline" size="sm" asChild>
-                  <a href={`/property/${property.slug}`} target="_blank" rel="noreferrer">
-                    <ExternalLink className="h-4 w-4" /> Open live page
-                  </a>
-                </Button>
-              )}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Step 10 — Publish */}
-      {step === 9 && (
-        <div className="surface space-y-5 p-5">
-          <div>
-            <p className="display-title text-lg">Ready to go live?</p>
-            <p className="text-sm text-muted-foreground">
-              Publishing makes the listing reachable at its public link and in your sitemap.
-            </p>
-          </div>
-          <label className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
-            <span>
-              <span className="text-sm font-medium">Published</span>
-              <span className="block text-xs text-muted-foreground">
-                Visible to anyone with the link
+          <StepShell
+            title="Ready to go live?"
+            description="Publishing makes the listing reachable at its public link and in your sitemap."
+            className="space-y-4"
+          >
+            <label className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+              <span>
+                <span className="text-sm font-medium">Published</span>
+                <span className="block text-xs text-muted-foreground">
+                  Visible to anyone with the link
+                </span>
               </span>
-            </span>
-            <Switch
-              checked={values.is_published}
-              onCheckedChange={(v) => setValue("is_published", v, { shouldDirty: true })}
-            />
-          </label>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {PROPERTY_FLAGS.map((flag) => (
-              <label
-                key={flag.key}
-                className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
-              >
-                <span className="text-sm">{flag.label}</span>
-                <Switch
-                  checked={Boolean(values[flag.key as keyof PropertyFormValues])}
-                  onCheckedChange={(v) =>
-                    setValue(flag.key as keyof PropertyFormValues, v as never, {
-                      shouldDirty: true,
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-          {completion < 70 && (
-            <p className="rounded-xl bg-muted/60 p-4 text-xs text-muted-foreground">
-              This listing is {completion}% complete. Adding photos, area and a description
-              significantly improves enquiries.
-            </p>
-          )}
+              <Switch
+                checked={values.is_published}
+                onCheckedChange={(v) => setValue("is_published", v, { shouldDirty: true })}
+              />
+            </label>
+            {completion < 70 && (
+              <p className="rounded-xl bg-muted/60 p-4 text-xs text-muted-foreground">
+                This listing is {completion}% complete. Adding photos, area and a description
+                significantly improves enquiries.
+              </p>
+            )}
+          </StepShell>
         </div>
       )}
 
-      {/* Sticky wizard navigation */}
+      {/* Sticky bottom navigation */}
       <div className="glass sticky bottom-0 z-30 -mx-4 border-t px-4 py-3 md:-mx-6 md:px-6">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" onClick={back} disabled={step === 0}>
+          <Button type="button" variant="outline" onClick={() => goTo(step - 1)} disabled={step === 0}>
             <ArrowLeft className="h-4 w-4" /> Previous
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => void persist()}
-            disabled={pending}
-          >
+          <Button type="button" variant="ghost" onClick={() => void persist()} disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Save draft
           </Button>
@@ -994,9 +1205,9 @@ export function PropertyForm({ property }: { property?: Property | null }) {
             type="button"
             variant="ghost"
             className="hidden sm:inline-flex"
-            onClick={() => setStep(8)}
+            onClick={() => goTo(9)}
           >
-            Preview
+            <Eye className="h-4 w-4" /> Preview
           </Button>
           <div className="ml-auto flex items-center gap-2">
             {step < STEPS.length - 1 ? (
