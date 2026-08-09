@@ -499,6 +499,11 @@ export function PropertyForm({ property }: { property?: Property | null }) {
     values.area_unit,
   );
 
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(publicUrl);
+    toast.success("Public link copied");
+  };
+
   const areaValue = Number(values.super_area ?? values.builtup_area ?? values.carpet_area ?? 0);
   const photoCount = property ? (values.cover_image ? 1 : 0) : pendingFiles.length;
 

@@ -28,15 +28,15 @@ export function SummaryPanel({
   purpose: string;
   propertyType: string;
   city: string;
-  sector?: string | null;
-  builder?: string | null;
-  bedrooms?: number | null;
-  area?: number | null;
+  sector?: string | null | undefined;
+  builder?: string | null | undefined;
+  bedrooms?: number | null | undefined;
+  area?: number | null | undefined;
   areaUnit: string;
   price: number;
-  rate?: string | null;
+  rate?: string | null | undefined;
   photoCount: number;
-  coverImage?: string | null;
+  coverImage?: string | null | undefined;
   missing: { label: string; step: number }[];
   onJump: (step: number) => void;
 }) {
