@@ -31,9 +31,17 @@ import { RichTextEditor } from "@/components/property/RichTextEditor";
 import { MediaManager } from "@/components/property/MediaManager";
 import { PendingMediaPicker } from "@/components/property/PendingMediaPicker";
 import { SearchableSelect } from "@/components/property/SearchableSelect";
-import { ChoiceCard, CATEGORY_CARDS, PURPOSE_CARDS } from "@/components/property/wizard/PurposeCards";
+import {
+  ChoiceCard,
+  CATEGORY_CARDS,
+  LISTING_INTENTS,
+} from "@/components/property/wizard/PurposeCards";
 import { AmenityPicker } from "@/components/property/wizard/AmenityPicker";
 import { EmiCalculator } from "@/components/property/wizard/EmiCalculator";
+import { ChipSelect, COUNT_OPTIONS } from "@/components/property/wizard/ChipSelect";
+import { LocalitySearch } from "@/components/property/wizard/LocalitySearch";
+import { SummaryPanel } from "@/components/property/wizard/SummaryPanel";
+
 import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
 import { friendlyError } from "@/lib/errors";
