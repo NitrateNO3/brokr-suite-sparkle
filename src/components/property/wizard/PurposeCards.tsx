@@ -21,6 +21,33 @@ export const PURPOSE_CARDS = [
   { value: "lease", label: "For Lease", hint: "Long-term commercial lease", icon: Landmark },
 ] as const;
 
+/**
+ * Broker-facing listing intents. Each maps onto the purposes the database
+ * accepts (sale / rent / lease) and can pre-select a property category.
+ */
+export const LISTING_INTENTS = [
+  { id: "sale", label: "For Sale", hint: "Outright ownership transfer", icon: Tag, purpose: "sale" },
+  { id: "rent", label: "For Rent", hint: "Monthly rental", icon: KeyRound, purpose: "rent" },
+  { id: "pg", label: "PG / Co-living", hint: "Per-bed or shared rental", icon: Home, purpose: "rent" },
+  {
+    id: "commercial",
+    label: "Commercial",
+    hint: "Office, shop or warehouse lease",
+    icon: Landmark,
+    purpose: "lease",
+    category: "office_space",
+  },
+  {
+    id: "plot",
+    label: "Plot / Land",
+    hint: "Residential or industrial land",
+    icon: LandPlot,
+    purpose: "sale",
+    category: "plot",
+  },
+] as const;
+
+
 export const CATEGORY_CARDS = [
   { value: "apartment", label: "Apartment", icon: Building2 },
   { value: "builder_floor", label: "Builder Floor", icon: Building },
