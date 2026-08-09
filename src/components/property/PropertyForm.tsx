@@ -143,30 +143,23 @@ export type PropertyFormValues = z.infer<typeof schema>;
 const DRAFT_KEY = "brokrsuite-property-draft";
 
 const STEPS = [
-  { id: "purpose", label: "Purpose", caption: "What are you listing?" },
-  { id: "basics", label: "Basic details", caption: "Name, story and identity" },
-  { id: "location", label: "Location", caption: "Where the property sits" },
-  { id: "pricing", label: "Pricing", caption: "Ask, charges and EMI" },
-  { id: "specs", label: "Specifications", caption: "Configuration and area" },
-  { id: "amenities", label: "Amenities", caption: "What buyers get" },
-  { id: "media", label: "Photos & videos", caption: "Show it beautifully" },
-  { id: "documents", label: "Documents", caption: "Papers and approvals" },
-  { id: "seo", label: "SEO & sharing", caption: "Reach and visibility" },
-  { id: "publish", label: "Preview & publish", caption: "Final check" },
+  { id: "purpose", label: "Property", caption: "What are you listing?" },
+  { id: "location", label: "Location", caption: "Where is your property?" },
+  { id: "details", label: "Details", caption: "Configuration and highlights" },
+  { id: "price", label: "Price", caption: "Ask and charges" },
+  { id: "photos", label: "Photos", caption: "Show it beautifully" },
+  { id: "publish", label: "Publish", caption: "Preview and go live" },
 ] as const;
 
 const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
   0: ["property_type", "purpose"],
-  1: ["title", "slug"],
-  2: ["city"],
+  1: ["city"],
+  2: ["title", "slug"],
   3: ["price"],
   4: [],
   5: [],
-  6: [],
-  7: [],
-  8: [],
-  9: [],
 };
+
 
 const RESIDENTIAL = ["apartment", "builder_floor", "villa", "independent_house", "penthouse"];
 const LAND = ["plot", "farm_house"];
