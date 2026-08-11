@@ -68,10 +68,22 @@ export function QuickPostForm() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!propertyType) return toast.error("Select a property type");
-    if (!city.trim()) return toast.error("Enter the city");
-    if (!locality.trim()) return toast.error("Enter the locality");
-    if (!agreed) return toast.error("Please accept the terms to continue");
+    if (!propertyType) {
+      toast.error("Select a property type");
+      return;
+    }
+    if (!city.trim()) {
+      toast.error("Enter the city");
+      return;
+    }
+    if (!locality.trim()) {
+      toast.error("Enter the locality");
+      return;
+    }
+    if (!agreed) {
+      toast.error("Please accept the terms to continue");
+      return;
+    }
 
     const code = generatePropertyCode();
     const title = `${typeLabel} in ${locality.trim()}, ${city.trim()}`;
