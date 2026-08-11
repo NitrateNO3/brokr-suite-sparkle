@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { QuickPostForm } from "@/components/property/QuickPostForm";
+import { PostPropertyForm } from "@/components/property/PostPropertyForm";
 
 export const Route = createFileRoute("/_authenticated/properties/new")({
   head: () => ({
@@ -21,8 +21,8 @@ export const Route = createFileRoute("/_authenticated/properties/new")({
 
 function NewPropertyPage() {
   return (
-    <div className="surface p-6 md:p-8">
-      <QuickPostForm />
+    <div className="px-4 py-2 md:px-8">
+      <PostPropertyForm />
     </div>
   );
 }
