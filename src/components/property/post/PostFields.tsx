@@ -49,11 +49,11 @@ export function FieldShell({
   children,
   className,
 }: {
-  label?: string;
-  required?: boolean;
-  error?: string;
+  label?: string | undefined;
+  required?: boolean | undefined;
+  error?: string | undefined;
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
