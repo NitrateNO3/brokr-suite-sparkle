@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PropertyForm } from "@/components/property/PropertyForm";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { QuickPostForm } from "@/components/property/QuickPostForm";
 
 export const Route = createFileRoute("/_authenticated/properties/new")({
   head: () => ({
     meta: [
-      { title: "Add property — BrokrSuite" },
+      { title: "Post a property — BrokrSuite" },
       {
         name: "description",
-        content: "Create a new listing with pricing, location, amenities, media and SEO details.",
+        content:
+          "Post a property in under a minute — owner details, sale or rent, property type and locality.",
       },
-      { property: "og:title", content: "Add property — BrokrSuite" },
+      { property: "og:title", content: "Post a property — BrokrSuite" },
       { property: "og:description", content: "Publish a new property listing in minutes." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: NewPropertyPage,
@@ -19,12 +21,9 @@ export const Route = createFileRoute("/_authenticated/properties/new")({
 
 function NewPropertyPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Add property"
-        description="Fill in the details — the public listing page is generated automatically."
-      />
-      <PropertyForm />
+    <div className="surface p-6 md:p-8">
+      <QuickPostForm />
     </div>
   );
 }
+
