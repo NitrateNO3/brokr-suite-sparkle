@@ -270,7 +270,7 @@ export function DynamicField({
   areaUnit: string;
   onChange: (v: string) => void;
   onAreaUnit: (v: string) => void;
-  error?: string;
+  error?: string | undefined;
 }) {
   const control = () => {
     switch (field.kind) {
