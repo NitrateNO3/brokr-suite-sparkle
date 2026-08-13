@@ -190,7 +190,7 @@ const AREA_CARPET: FieldSpec = { key: "carpet_area", label: "Carpet Area", kind:
 const AREA_PLOT: FieldSpec = { key: "super_area", label: "Plot Area", kind: "area", required: true };
 
 /** Compact "features" block (chips) shown only when it makes sense. */
-export function featureFields(category: PropertyCategory): FieldSpec[] {
+function featureFieldsBase(category: PropertyCategory): FieldSpec[] {
   switch (category) {
     case "apartment":
       return [
@@ -236,18 +236,14 @@ export function featureFields(category: PropertyCategory): FieldSpec[] {
 }
 
 /** Type-specific detail fields (areas + everything unique to that property type). */
-export function detailFields(category: PropertyCategory): FieldSpec[] {
+function detailFieldsBase(category: PropertyCategory): FieldSpec[] {
   switch (category) {
     case "apartment":
       return [
         AREA_BUILTUP, AREA_CARPET,
         { key: "parking", label: "Covered Parking", kind: "number", placeholder: "0" },
         { key: "facing", label: "Facing", kind: "select", options: FACING_OPTIONS },
-        { key: "age", label: "Property Status", kind: "chips", options: AGE_RESIDENTIAL, wide: true },
-        { key: "x_condition", label: "Property Condition", kind: "select", options: [
-          { value: "excellent", label: "Excellent" }, { value: "good", label: "Good" },
-          { value: "needs_work", label: "Needs renovation" },
-        ] },
+        { key: "age", label: "Property Age", kind: "chips", options: AGE_RESIDENTIAL, wide: true },
         { key: "x_ownership", label: "Ownership Type", kind: "select", options: [
           { value: "freehold", label: "Freehold" }, { value: "leasehold", label: "Leasehold" },
           { value: "power_of_attorney", label: "Power of Attorney" }, { value: "co_operative", label: "Co-operative Society" },
@@ -258,7 +254,7 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
         AREA_PLOT, AREA_BUILTUP, AREA_CARPET,
         { key: "parking", label: "Covered Parking", kind: "number", placeholder: "0" },
         { key: "facing", label: "Facing", kind: "select", options: FACING_OPTIONS },
-        { key: "age", label: "Property Status", kind: "chips", options: AGE_RESIDENTIAL, wide: true },
+        { key: "age", label: "Property Age", kind: "chips", options: AGE_RESIDENTIAL, wide: true },
         { key: "x_extra_rooms", label: "Extra rooms", kind: "chips", wide: true, options: [
           { value: "garden", label: "Garden" }, { value: "servant", label: "Servant Room" },
           { value: "study", label: "Study Room" }, { value: "pooja", label: "Pooja Room" },
@@ -268,12 +264,8 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
     case "plot":
       return [
         AREA_PLOT,
-        { key: "x_length", label: "Plot Length", kind: "number", suffix: "ft" },
-        { key: "x_width", label: "Plot Width", kind: "number", suffix: "ft" },
-        { key: "x_road_width", label: "Road Width", kind: "number", suffix: "ft" },
         { key: "facing", label: "Facing", kind: "select", options: FACING_OPTIONS },
         { key: "x_corner", label: "Corner Property", kind: "chips", options: YES_NO },
-        { key: "x_boundary", label: "Boundary Wall", kind: "chips", options: YES_NO },
         { key: "x_gated", label: "Gated Community", kind: "chips", options: YES_NO },
         { key: "x_authority", label: "Authority / Approval", kind: "text", placeholder: "e.g. HSVP / DTCP" },
         { key: "x_land_use", label: "Land Use", kind: "select", options: [
@@ -289,12 +281,10 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
     case "agri":
       return [
         AREA_PLOT,
-        { key: "x_road_width", label: "Road Width", kind: "number", suffix: "ft" },
         { key: "x_water", label: "Water Availability", kind: "chips", options: YES_NO },
         { key: "x_electricity", label: "Electricity", kind: "chips", options: YES_NO },
         { key: "x_borewell", label: "Borewell", kind: "chips", options: YES_NO },
         { key: "x_irrigation", label: "Irrigation", kind: "chips", options: YES_NO },
-        { key: "x_boundary", label: "Boundary Wall", kind: "chips", options: YES_NO },
         { key: "x_farm_house", label: "Farm House on land", kind: "chips", options: YES_NO },
         { key: "x_construction_allowed", label: "Construction Allowed", kind: "chips", options: YES_NO },
         { key: "x_soil", label: "Soil Type", kind: "text", placeholder: "e.g. Alluvial" },
@@ -318,7 +308,7 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
         { key: "x_reception", label: "Reception", kind: "chips", options: YES_NO },
         { key: "x_power_backup", label: "Power Backup", kind: "chips", options: YES_NO },
         { key: "x_ac", label: "Air Conditioning", kind: "chips", options: YES_NO },
-        { key: "age", label: "Property Status", kind: "chips", options: AGE_COMMERCIAL, wide: true },
+        { key: "age", label: "Property Age", kind: "chips", options: AGE_COMMERCIAL, wide: true },
       ];
     case "shop":
       return [
@@ -333,7 +323,7 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
         { key: "x_power_backup", label: "Power Backup", kind: "chips", options: YES_NO },
         { key: "x_main_road", label: "Main Road Facing", kind: "chips", options: YES_NO },
         { key: "x_suitable_for", label: "Suitable For", kind: "text", placeholder: "e.g. Showroom, Clinic, Café", wide: true },
-        { key: "age", label: "Property Status", kind: "chips", options: AGE_COMMERCIAL, wide: true },
+        { key: "age", label: "Property Age", kind: "chips", options: AGE_COMMERCIAL, wide: true },
       ];
     case "warehouse":
       return [
@@ -348,7 +338,7 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
         { key: "x_washroom", label: "Washroom", kind: "chips", options: YES_NO },
         { key: "x_office_space", label: "Office Space inside", kind: "chips", options: YES_NO },
         { key: "x_storage_type", label: "Storage Type", kind: "text", placeholder: "e.g. Cold storage" },
-        { key: "age", label: "Property Status", kind: "chips", options: AGE_COMMERCIAL, wide: true },
+        { key: "age", label: "Property Age", kind: "chips", options: AGE_COMMERCIAL, wide: true },
       ];
     case "pg":
       return [
@@ -370,23 +360,18 @@ export function detailFields(category: PropertyCategory): FieldSpec[] {
 }
 
 /** Pricing fields depend on the listing purpose. */
-export function pricingFields(purpose: ListingPurpose): FieldSpec[] {
+function pricingFieldsBase(purpose: ListingPurpose): FieldSpec[] {
   if (purpose === "sale") {
     return [
       { key: "price", label: "Expected Price", kind: "money", required: true },
-      { key: "booking_amount", label: "Booking Amount", kind: "money" },
-      { key: "maintenance_charges", label: "Maintenance (monthly)", kind: "money" },
       { key: "negotiable", label: "Price Negotiable", kind: "toggle" },
       { key: "x_all_inclusive", label: "All Inclusive Price", kind: "toggle" },
-      { key: "x_tax_extra", label: "Tax / GST applicable extra", kind: "toggle" },
-      { key: "x_maintenance_included", label: "Maintenance included in price", kind: "toggle" },
     ];
   }
   if (purpose === "rent") {
     return [
       { key: "price", label: "Monthly Rent", kind: "money", required: true },
       { key: "security_deposit", label: "Security Deposit", kind: "money" },
-      { key: "maintenance_charges", label: "Maintenance (monthly)", kind: "money" },
       { key: "x_electricity", label: "Electricity Charges", kind: "select", options: [
         { value: "included", label: "Included" }, { value: "extra", label: "Extra as per usage" },
       ] },
@@ -416,15 +401,36 @@ export function pricingFields(purpose: ListingPurpose): FieldSpec[] {
   ];
 }
 
+
+/** Fields the user must answer: everything except free-form prose. */
+function mandatory(fields: FieldSpec[]): FieldSpec[] {
+  return fields.map((f) => (f.kind === "textarea" || f.kind === "toggle" ? f : { ...f, required: true }));
+}
+
+/** Features are always presented as dropdowns for faster, error-free input. */
+export function featureFields(category: PropertyCategory): FieldSpec[] {
+  return mandatory(
+    featureFieldsBase(category).map((f) => (f.kind === "chips" ? { ...f, kind: "select" as const } : f)),
+  );
+}
+
+export function detailFields(category: PropertyCategory): FieldSpec[] {
+  return mandatory(detailFieldsBase(category));
+}
+
+export function pricingFields(purpose: ListingPurpose): FieldSpec[] {
+  return pricingFieldsBase(purpose);
+}
+
 /** Columns that exist on the properties table — everything else is stored as prose. */
 export const DB_FIELD_KEYS = new Set([
   "bedrooms", "bathrooms", "balconies", "parking", "floor_no", "total_floors",
   "facing", "furnishing", "age", "carpet_area", "builtup_area", "super_area",
-  "price", "booking_amount", "security_deposit", "maintenance_charges", "negotiable",
+  "price", "security_deposit", "negotiable",
 ]);
 
 export const INTEGER_KEYS = new Set(["bedrooms", "bathrooms", "balconies", "parking", "floor_no", "total_floors"]);
-export const NUMERIC_KEYS = new Set(["carpet_area", "builtup_area", "super_area", "price", "booking_amount", "security_deposit", "maintenance_charges"]);
+export const NUMERIC_KEYS = new Set(["carpet_area", "builtup_area", "super_area", "price", "security_deposit"]);
 
 /** Known societies / builder projects per city + locality. */
 export const SOCIETIES: Record<string, Record<string, string[]>> = {

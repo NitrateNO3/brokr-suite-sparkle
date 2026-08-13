@@ -77,62 +77,26 @@ export const LEAD_STATUSES = [
 
 export const CITIES = ["Gurgaon", "Sohna", "Manesar"] as const;
 
-export const GURGAON_SECTORS = [
-  "14",
-  "15",
-  "22",
-  "23",
-  "28",
-  "31",
-  "37D",
-  "42",
-  "43",
-  "45",
-  "46",
-  "47",
-  "48",
-  "49",
-  "50",
-  "51",
-  "52",
-  "54",
-  "55",
-  "56",
-  "57",
-  "58",
-  "59",
-  "60",
-  "61",
-  "62",
-  "63",
-  "65",
-  "66",
-  "67",
-  "68",
-  "69",
-  "70",
-  "71",
-  "72",
-  "82",
-  "83",
-  "84",
-  "85",
-  "86",
-  "88",
-  "89",
-  "90",
-  "91",
-  "92",
-  "93",
-  "95",
-  "99",
-  "102",
-  "104",
-  "109",
-  "110",
-  "111",
-  "113",
-  "114",
+/** All Indian states + union territories, alphabetical. */
+export const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+  "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+] as const;
+
+/** Sector numbers 1 → 115, in order. */
+export const GURGAON_SECTORS = Array.from({ length: 115 }, (_, i) => String(i + 1));
+
+/** Well-known private colonies / townships, listed after the sectors. */
+export const PRIVATE_COLONIES = [
+  "DLF Phase 1", "DLF Phase 2", "DLF Phase 3", "DLF Phase 4", "DLF Phase 5",
+  "Sushant Lok 1", "Sushant Lok 2", "Sushant Lok 3", "South City 1", "South City 2",
+  "Palam Vihar", "Ardee City", "Nirvana Country", "Malibu Towne", "Rosewood City",
+  "Uppal Southend", "Suncity", "Vatika City", "Sohna Road", "Golf Course Road",
+  "Golf Course Extension Road", "New Gurgaon", "MG Road", "Old Gurgaon", "Civil Lines",
 ] as const;
 
 export const AMENITY_LIST = [

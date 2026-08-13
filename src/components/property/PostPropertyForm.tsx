@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -32,7 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uploadToStorage } from "@/lib/storage";
 import { friendlyError } from "@/lib/errors";
 import { generatePropertyCode, slugify } from "@/lib/format";
-import { CITIES, GURGAON_SECTORS } from "@/lib/constants";
+import { CITIES, GURGAON_SECTORS, INDIAN_STATES, PRIVATE_COLONIES } from "@/lib/constants";
 import { useLocationsFullQuery } from "@/lib/locations";
 import { useCreateProperty } from "@/lib/queries";
 import {
@@ -78,6 +79,7 @@ export function PostPropertyForm() {
   const [typeValue, setTypeValue] = useState("");
 
   // location
+  const [stateName, setStateName] = useState("Haryana");
   const [city, setCity] = useState("");
   const [locality, setLocality] = useState("");
   const [society, setSociety] = useState("");
@@ -101,6 +103,7 @@ export function PostPropertyForm() {
   const [agreed, setAgreed] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const typeSpec = useMemo(() => findType(typeValue), [typeValue]);
   const category = typeSpec?.category ?? "other";
@@ -118,8 +121,9 @@ export function PostPropertyForm() {
   const localityOptions = useMemo(() => {
     const rows = (locations ?? []).filter((l) => !city || l.city === city);
     const dbSectors = rows.flatMap((l) => [l.sector, l.area, l.sub_sector].filter(Boolean) as string[]);
-    const fallback = city === "Gurgaon" ? GURGAON_SECTORS.map((s) => `Sector ${s}`) : [];
-    return Array.from(new Set([...dbSectors, ...fallback]));
+    const sectors = GURGAON_SECTORS.map((s) => `Sector ${s}`);
+    const colonies = [...PRIVATE_COLONIES];
+    return Array.from(new Set([...sectors, ...colonies, ...dbSectors]));
   }, [locations, city]);
 
   const societyOptions = useMemo(() => societiesFor(city, locality), [city, locality]);
@@ -167,7 +171,11 @@ export function PostPropertyForm() {
 
   const validate = () => {
     const next: Record<string, string> = {};
+    if (!name.trim()) next["name"] = "Name is required";
+    if (!/^\d{10}$/.test(mobile.trim())) next["mobile"] = "Enter a valid 10-digit mobile number";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) next["email"] = "Enter a valid email address";
     if (!purpose) next["purpose"] = "Choose what this listing is for";
+    if (!stateName.trim()) next["state"] = "State is required";
     if (!typeValue) next["type"] = "Select a property type";
     if (!city.trim()) next["city"] = "City is required";
     if (!locality.trim()) next["locality"] = "Locality is required";
@@ -219,7 +227,7 @@ export function PostPropertyForm() {
       city: city.trim(),
       sector: locality.trim(),
       builder: society.trim() || null,
-      address: address.trim() || null,
+      address: [address.trim(), stateName.trim()].filter(Boolean).join(", ") || null,
       landmark: landmark.trim() || null,
       pin_code: pin.trim() || null,
       area_unit: areaUnit,
@@ -290,7 +298,7 @@ export function PostPropertyForm() {
   return (
     <form onSubmit={submit} className="mx-auto w-full max-w-[600px] pb-28">
       <header className="mb-8">
-        <h1 className="display-title text-2xl">Post your property</h1>
+        <h1 className="display-title text-2xl font-bold">Post your property</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Answer only what matters — the form adapts to the property you choose.
         </p>
@@ -302,10 +310,10 @@ export function PostPropertyForm() {
             <ChipGroup options={POSTER_ROLES} value={role} onChange={(v) => setRole(v || "agent")} />
           </FieldShell>
           <div className={grid}>
-            <FieldShell label="Name">
+            <FieldShell label="Name" required error={errors["name"]}>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className="h-10" />
             </FieldShell>
-            <FieldShell label="Mobile">
+            <FieldShell label="Mobile" required error={errors["mobile"]}>
               <div className="flex items-center gap-2">
                 <span className="flex h-10 shrink-0 items-center gap-1 rounded-md border border-input px-2.5 text-xs text-muted-foreground">
                   <Phone className="h-3 w-3" /> +91
@@ -319,7 +327,7 @@ export function PostPropertyForm() {
                 />
               </div>
             </FieldShell>
-            <FieldShell label="Email" className="sm:col-span-2">
+            <FieldShell label="Email" required error={errors["email"]} className="sm:col-span-2">
               <Input
                 type="email"
                 value={email}
@@ -363,6 +371,20 @@ export function PostPropertyForm() {
           <>
             <Section step={3} title="Property Location" hint="City → Locality → Society → Address">
               <div className={grid}>
+                <FieldShell label="State" required error={errors["state"]}>
+                  <Select value={stateName} onValueChange={setStateName}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {INDIAN_STATES.map((st) => (
+                        <SelectItem key={st} value={st}>
+                          {st}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FieldShell>
                 <FieldShell label="City" required error={errors["city"]}>
                   <SuggestInput
                     id="city"
@@ -547,7 +569,17 @@ export function PostPropertyForm() {
                 Send buyer / tenant enquiries to my WhatsApp
               </CheckRow>
               <CheckRow checked={agreed} onChange={setAgreed}>
-                I agree to the Terms &amp; Conditions and Privacy Policy
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTermsOpen(true);
+                  }}
+                  className="font-medium text-primary underline underline-offset-2"
+                >
+                  Terms &amp; Conditions and Privacy Policy
+                </button>
               </CheckRow>
               {errors["agreed"] ? <p className="text-xs text-destructive">{errors["agreed"]}</p> : null}
             </Section>
@@ -583,6 +615,36 @@ export function PostPropertyForm() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-bold">Terms &amp; Conditions and Privacy Policy</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              By posting a property you confirm that the information provided is accurate and that you
+              are authorised to list it — as the owner, an appointed agent or the builder.
+            </p>
+            <p>
+              Listings may be reviewed before publishing. Misleading pricing, duplicate listings or
+              photographs you do not own may be removed without notice.
+            </p>
+            <p>
+              Contact details you enter are used only to route buyer and tenant enquiries to you, and
+              are shared with a prospect only after they raise an enquiry on this listing.
+            </p>
+            <p>
+              Documents uploaded against a property stay private to your team unless you explicitly
+              enable document sharing on a share link.
+            </p>
+            <p>
+              You may request removal of a listing and of your personal data at any time by contacting
+              your agency administrator.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
