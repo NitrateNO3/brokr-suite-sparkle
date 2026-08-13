@@ -3,6 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Clock,
   Mail,
   MessageSquare,
   Phone,
@@ -361,195 +364,235 @@ function LeadsPage() {
           description="Enquiries submitted on your public property pages will appear here."
         />
       ) : (
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="space-y-2">
           {filtered.map((lead) => (
-            <div key={lead.id} className="surface space-y-3 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium">{lead.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {lead.property_title ?? "General enquiry"} · {timeAgo(lead.created_at)}
-                  </p>
-                </div>
-                <StatusBadge status={lead.status} kind="lead" />
-              </div>
-
-              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                {lead.phone && (
-                  <a
-                    className="flex items-center gap-1 hover:text-foreground"
-                    href={`tel:${lead.phone}`}
-                  >
-                    <Phone className="h-3.5 w-3.5" /> {lead.phone}
-                  </a>
-                )}
-                {lead.email && (
-                  <a
-                    className="flex items-center gap-1 hover:text-foreground"
-                    href={`mailto:${lead.email}`}
-                  >
-                    <Mail className="h-3.5 w-3.5" /> {lead.email}
-                  </a>
-                )}
-                {lead.phone && (
-                  <a
-                    className="flex items-center gap-1 hover:text-foreground"
-                    href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
-                  </a>
-                )}
-              </div>
-
-              {lead.message && (
-                <p className="rounded-lg bg-muted/60 p-3 text-sm text-muted-foreground">
-                  {lead.message}
-                </p>
-              )}
-
-              <Textarea
-                rows={2}
-                placeholder="Internal notes — site visit, budget, objections…"
-                defaultValue={lead.notes ?? ""}
-                onBlur={(e) => {
-                  if (e.target.value === (lead.notes ?? "")) return;
-                  update.mutate(
-                    { id: lead.id, values: { notes: e.target.value } },
-                    { onSuccess: () => toast.success("Notes saved") },
-                  );
-                }}
-              />
-
-              <div className="rounded-lg border border-border/70 p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <span
-                    className={`flex items-center gap-1.5 text-xs font-medium ${
-                      FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
-                    }`}
-                  >
-                    <CalendarClock className="h-3.5 w-3.5" />
-                    {FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]} ·{" "}
-                    {formatFollowUp(lead.follow_up_at)}
-                  </span>
-                  {lead.last_contacted_at && (
-                    <span className="text-[11px] text-muted-foreground">
-                      Contacted {timeAgo(lead.last_contacted_at)}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Input
-                    type="datetime-local"
-                    className="h-9 flex-1 min-w-44"
-                    value={toLocalInput(lead.follow_up_at)}
-                    onChange={(e) =>
-                      update.mutate(
-                        { id: lead.id, values: { follow_up_at: fromLocalInput(e.target.value) } },
-                        {
-                          onSuccess: () =>
-                            toast.success(
-                              e.target.value ? "Follow-up scheduled" : "Follow-up cleared",
-                            ),
-                        },
-                      )
-                    }
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() =>
-                      update.mutate(
-                        {
-                          id: lead.id,
-                          values: {
-                            last_contacted_at: new Date().toISOString(),
-                            follow_up_at: null,
-                          },
-                        },
-                        { onSuccess: () => toast.success("Marked as contacted") },
-                      )
-                    }
-                  >
-                    <CheckCircle2 className="h-4 w-4" /> Contacted
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <UserRound className="h-3.5 w-3.5" /> {nameOf(lead.assigned_to)}
-                </span>
-                <Select
-                  value={lead.assigned_to ?? UNASSIGNED}
-                  onValueChange={(value) =>
-                    update.mutate(
-                      {
-                        id: lead.id,
-                        values: { assigned_to: value === UNASSIGNED ? null : value },
-                      },
-                      {
-                        onSuccess: () =>
-                          toast.success(
-                            value === UNASSIGNED
-                              ? "Lead unassigned"
-                              : `Assigned to ${nameOf(value)}`,
-                          ),
-                      },
-                    )
-                  }
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Assign to teammate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
-                    {members.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.full_name ?? member.email ?? "Teammate"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Select
-                  value={lead.status}
-                  onValueChange={(value) =>
-                    update.mutate(
-                      { id: lead.id, values: { status: value as LeadStatus } },
-                      { onSuccess: () => toast.success("Lead updated") },
-                    )
-                  }
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_STATUSES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Delete lead"
-                  onClick={() =>
-                    remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
-                  }
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              members={members}
+              nameOf={nameOf}
+              onUpdate={(values, message) =>
+                update.mutate({ id: lead.id, values }, { onSuccess: () => toast.success(message) })
+              }
+              onDelete={() =>
+                remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
+              }
+            />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+
+/** Age of a lead in whole days since it was created. */
+function leadAge(createdAt: string): string {
+  const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
+  if (days <= 0) return "New today";
+  if (days === 1) return "1 day old";
+  return `${days} days old`;
+}
+
+type LeadRow = NonNullable<ReturnType<typeof useLeadsQuery>["data"]>[number];
+
+function LeadCard({
+  lead,
+  members,
+  nameOf,
+  onUpdate,
+  onDelete,
+}: {
+  lead: LeadRow;
+  members: { id: string; full_name: string | null; email: string | null }[];
+  nameOf: (id: string | null) => string;
+  onUpdate: (values: Record<string, unknown>, message: string) => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const isVisit = lead.status === "visit_scheduled";
+
+  return (
+    <div className="surface p-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 text-left"
+      >
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">{lead.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {lead.property_title ?? "General enquiry"} · {leadAge(lead.created_at)}
+          </p>
+        </div>
+        {isVisit && lead.follow_up_at ? (
+          <span className="hidden items-center gap-1 text-[11px] text-muted-foreground sm:flex">
+            <CalendarClock className="h-3.5 w-3.5" /> {formatFollowUp(lead.follow_up_at)}
+          </span>
+        ) : null}
+        <StatusBadge status={lead.status} kind="lead" />
+      </button>
+
+      {open ? (
+        <div className="mt-3 space-y-3 border-t border-border/70 pt-3">
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+            {lead.phone && (
+              <a className="flex items-center gap-1 hover:text-foreground" href={`tel:${lead.phone}`}>
+                <Phone className="h-3.5 w-3.5" /> {lead.phone}
+              </a>
+            )}
+            {lead.email && (
+              <a className="flex items-center gap-1 hover:text-foreground" href={`mailto:${lead.email}`}>
+                <Mail className="h-3.5 w-3.5" /> {lead.email}
+              </a>
+            )}
+            {lead.phone && (
+              <a
+                className="flex items-center gap-1 hover:text-foreground"
+                href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> WhatsApp
+              </a>
+            )}
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" /> Created {timeAgo(lead.created_at)}
+            </span>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Requirements</Label>
+            <Textarea
+              rows={2}
+              placeholder="Budget, configuration, preferred locality, timeline…"
+              defaultValue={lead.message ?? ""}
+              onBlur={(e) => {
+                if (e.target.value === (lead.message ?? "")) return;
+                onUpdate({ message: e.target.value }, "Requirements saved");
+              }}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Internal notes</Label>
+            <Textarea
+              rows={2}
+              placeholder="Site visit, objections, negotiation…"
+              defaultValue={lead.notes ?? ""}
+              onBlur={(e) => {
+                if (e.target.value === (lead.notes ?? "")) return;
+                onUpdate({ notes: e.target.value }, "Notes saved");
+              }}
+            />
+          </div>
+
+          <div className="rounded-lg border border-border/70 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span
+                className={`flex items-center gap-1.5 text-xs font-medium ${
+                  FOLLOW_UP_TONE[followUpState(lead.follow_up_at)]
+                }`}
+              >
+                <CalendarClock className="h-3.5 w-3.5" />
+                {isVisit ? "Site visit" : FOLLOW_UP_LABEL[followUpState(lead.follow_up_at)]} ·{" "}
+                {formatFollowUp(lead.follow_up_at)}
+              </span>
+              {lead.last_contacted_at && (
+                <span className="text-[11px] text-muted-foreground">
+                  Contacted {timeAgo(lead.last_contacted_at)}
+                </span>
+              )}
+            </div>
+            <Label className="mb-1.5 block text-xs">
+              {isVisit ? "Visit date & time" : "Next follow-up"}
+            </Label>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                type="datetime-local"
+                className="h-9 min-w-44 flex-1"
+                value={toLocalInput(lead.follow_up_at)}
+                onChange={(e) =>
+                  onUpdate(
+                    { follow_up_at: fromLocalInput(e.target.value) },
+                    e.target.value
+                      ? isVisit
+                        ? "Visit scheduled"
+                        : "Follow-up scheduled"
+                      : "Cleared",
+                  )
+                }
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  onUpdate(
+                    { last_contacted_at: new Date().toISOString(), follow_up_at: null },
+                    "Marked as contacted",
+                  )
+                }
+              >
+                <CheckCircle2 className="h-4 w-4" /> Contacted
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <UserRound className="h-3.5 w-3.5" /> {nameOf(lead.assigned_to)}
+            </span>
+            <Select
+              value={lead.assigned_to ?? UNASSIGNED}
+              onValueChange={(value) =>
+                onUpdate(
+                  { assigned_to: value === UNASSIGNED ? null : value },
+                  value === UNASSIGNED ? "Lead unassigned" : `Assigned to ${nameOf(value)}`,
+                )
+              }
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Assign to teammate" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNASSIGNED}>Unassigned</SelectItem>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.full_name ?? member.email ?? "Teammate"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select
+              value={lead.status}
+              onValueChange={(value) => onUpdate({ status: value as LeadStatus }, "Lead updated")}
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LEAD_STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="icon" aria-label="Delete lead" onClick={onDelete}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
