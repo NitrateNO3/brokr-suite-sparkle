@@ -33,7 +33,7 @@ export function Section({
           {step}
         </span>
         <div>
-          <h3 className="text-[15px] font-semibold tracking-tight">{title}</h3>
+          <h3 className="text-[15px] font-bold tracking-tight">{title}</h3>
           {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
         </div>
       </header>
@@ -58,7 +58,7 @@ export function FieldShell({
   return (
     <div className={cn("space-y-1.5", className)}>
       {label ? (
-        <span className="block text-xs font-medium text-muted-foreground">
+        <span className="block text-xs font-semibold text-foreground">
           {label}
           {required ? <span className="ml-0.5 text-destructive">*</span> : null}
         </span>
