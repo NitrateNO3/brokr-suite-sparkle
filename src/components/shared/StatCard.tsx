@@ -43,7 +43,10 @@ export function StatCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="eyebrow">{label}</p>
-          <p className="display-title mt-2 truncate text-2xl tabular-nums">{value}</p>
+          <p className="display-title mt-2.5 truncate text-[28px] font-extrabold leading-none tabular-nums">
+            {value}
+          </p>
+
           <div className="mt-1.5 flex items-center gap-2">
             {typeof delta === "number" && (
               <span
