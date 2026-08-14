@@ -72,22 +72,25 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                   <Link
                     to={item.url}
-                    className="group relative flex items-center gap-3 transition-colors"
+                    className={`group relative flex items-center gap-3 rounded-xl transition-all duration-200 ${
+                      active ? "nav-active font-medium text-sidebar-accent-foreground" : ""
+                    }`}
                   >
                     <span
                       aria-hidden
-                      className={`absolute -left-2 h-5 w-1 rounded-full bg-sidebar-primary transition-all duration-300 ${
+                      className={`absolute left-0 h-5 w-[3px] rounded-full bg-sidebar-primary transition-all duration-300 ${
                         active ? "opacity-100" : "scale-y-0 opacity-0"
                       }`}
                     />
                     <item.icon
-                      className={`h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-                        active ? "text-sidebar-primary" : ""
+                      className={`h-4 w-4 shrink-0 transition-colors duration-200 ${
+                        active ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
                       }`}
                     />
-                    {!collapsed && <span className="truncate">{item.title}</span>}
+                    {!collapsed && <span className="truncate text-[13px]">{item.title}</span>}
                   </Link>
                 </SidebarMenuButton>
+
               </SidebarMenuItem>
             );
           })}
