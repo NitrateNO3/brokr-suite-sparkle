@@ -68,16 +68,17 @@ export function StatCard({
         </div>
         <span
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110",
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 transition-transform duration-200 group-hover:scale-105",
             tone === "brass" && "bg-brass/15 text-brass",
             tone === "success" && "bg-success/15 text-success",
             tone === "destructive" && "bg-destructive/15 text-destructive",
-            tone === "default" && "bg-primary/10 text-primary",
+            tone === "default" && "bg-primary/12 text-primary",
           )}
         >
           <Icon className="h-5 w-5" />
         </span>
       </div>
     </motion.div>
+
   );
 }
