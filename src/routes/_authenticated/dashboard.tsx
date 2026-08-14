@@ -408,28 +408,33 @@ function DashboardPage() {
         </Panel>
 
         <Panel title="Lead conversion funnel" subtitle="Pipeline by stage">
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {funnel.map((stage, i) => {
               const max = Math.max(...funnel.map((f) => f.count), 1);
+              const pct = Math.round((stage.count / max) * 100);
               return (
                 <div key={stage.stage}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{stage.stage}</span>
-                    <span className="font-semibold tabular-nums">{stage.count}</span>
+                    <span className="font-semibold tabular-nums">
+                      {stage.count}
+                      <span className="ml-1.5 text-muted-foreground">{pct}%</span>
+                    </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(stage.count / max) * 100}%` }}
+                      animate={{ width: `${pct}%` }}
                       transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full bg-primary"
-                      style={{ opacity: 1 - i * 0.12 }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-chart-5"
+                      style={{ opacity: 1 - i * 0.1 }}
                     />
                   </div>
                 </div>
               );
             })}
           </div>
+
           <Button asChild variant="ghost" size="sm" className="mt-4 w-full">
             <Link to="/leads">
               Open CRM <ArrowRight className="h-4 w-4" />
