@@ -250,16 +250,20 @@ function DashboardPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Deep Real Estate"
+        gradient
         title={`${greeting()} — here's your portfolio`}
         description="Live inventory, pipeline and performance across every agent and listing."
         actions={
           <>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="rounded-xl">
               <Link to="/analytics">
                 <BarChart3 className="h-4 w-4" /> Full analytics
               </Link>
             </Button>
-            <Button asChild>
+            <Button
+              asChild
+              className="brand-gradient rounded-xl shadow-[var(--shadow-soft)] transition-opacity hover:opacity-90"
+            >
               <Link to="/properties/new">
                 <Plus className="h-4 w-4" /> Add property
               </Link>
@@ -274,15 +278,19 @@ function DashboardPage() {
           <Link
             key={action.label}
             to={action.to}
-            className="surface surface-hover group flex items-center gap-3 p-4"
+            className="surface surface-hover group flex items-center gap-3 p-4 sm:p-5"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-              <action.icon className="h-4 w-4" />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-primary/12 text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground">
+              <action.icon className="h-5 w-5" />
             </span>
-            <span className="truncate text-sm font-medium">{action.label}</span>
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{action.label}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">Open</span>
+            </span>
           </Link>
         ))}
       </div>
+
 
       {/* KPIs */}
       {isLoading ? (
@@ -400,28 +408,33 @@ function DashboardPage() {
         </Panel>
 
         <Panel title="Lead conversion funnel" subtitle="Pipeline by stage">
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {funnel.map((stage, i) => {
               const max = Math.max(...funnel.map((f) => f.count), 1);
+              const pct = Math.round((stage.count / max) * 100);
               return (
                 <div key={stage.stage}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{stage.stage}</span>
-                    <span className="font-semibold tabular-nums">{stage.count}</span>
+                    <span className="font-semibold tabular-nums">
+                      {stage.count}
+                      <span className="ml-1.5 text-muted-foreground">{pct}%</span>
+                    </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${(stage.count / max) * 100}%` }}
+                      animate={{ width: `${pct}%` }}
                       transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full bg-primary"
-                      style={{ opacity: 1 - i * 0.12 }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-chart-5"
+                      style={{ opacity: 1 - i * 0.1 }}
                     />
                   </div>
                 </div>
               );
             })}
           </div>
+
           <Button asChild variant="ghost" size="sm" className="mt-4 w-full">
             <Link to="/leads">
               Open CRM <ArrowRight className="h-4 w-4" />

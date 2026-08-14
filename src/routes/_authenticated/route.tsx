@@ -51,12 +51,17 @@ function AuthenticatedLayout() {
                   <CircleUser className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="sm" className="shadow-[var(--shadow-soft)]">
+              <Button
+                asChild
+                size="sm"
+                className="brand-gradient rounded-xl shadow-[var(--shadow-soft)] transition-opacity hover:opacity-90"
+              >
                 <Link to="/properties/new">
                   <Plus className="h-4 w-4" />
                   <span className="hidden sm:inline">Add property</span>
                 </Link>
               </Button>
+
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
