@@ -21,14 +21,17 @@ export function PageHeader({
   actions,
   eyebrow,
   breadcrumbs = true,
+  gradient = false,
 }: {
   title: string;
   description?: string;
   actions?: ReactNode;
   eyebrow?: string;
   breadcrumbs?: boolean;
+  gradient?: boolean;
 }) {
   const crumbs = useCrumbs();
+
 
   return (
     <div className="space-y-3">
