@@ -60,7 +60,14 @@ export function PageHeader({
       <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:flex sm:items-end sm:justify-between">
         <div className="min-w-0">
           {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
-          <h1 className="display-title text-2xl sm:text-3xl">{title}</h1>
+          <h1
+            className={`display-title text-2xl sm:text-3xl lg:text-[34px] ${
+              gradient ? "gradient-text" : ""
+            }`}
+          >
+            {title}
+          </h1>
+
           {description && (
             <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>
           )}
