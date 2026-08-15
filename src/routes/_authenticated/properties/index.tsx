@@ -1,3 +1,4 @@
+import { usePermissions } from "@/lib/roles";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -90,6 +91,7 @@ export const Route = createFileRoute("/_authenticated/properties/")({
 function PropertiesPage() {
   const { data, isLoading } = usePropertiesQuery();
   const remove = useDeleteProperty();
+  const { canDeleteProperty } = usePermissions();
   const duplicate = useDuplicateProperty();
   const update = useUpdateProperty();
   const { data: imageCounts } = usePropertyImageCountsQuery();
@@ -338,9 +340,11 @@ function PropertiesPage() {
             >
               Export
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => setBulkDelete(true)}>
-              Delete
-            </Button>
+            {canDeleteProperty && (
+              <Button size="sm" variant="destructive" onClick={() => setBulkDelete(true)}>
+                Delete
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -547,13 +551,15 @@ function PropertiesPage() {
                     <Pencil className="h-4 w-4" />
                   </Link>
                 </IconAction>
-                <IconAction
-                  label="Delete Property"
-                  onClick={() => setPendingDelete(property.id)}
-                  className="hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="text-destructive h-4 w-4" />
-                </IconAction>
+                {canDeleteProperty && (
+                  <IconAction
+                    label="Delete Property"
+                    onClick={() => setPendingDelete(property.id)}
+                    className="hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="text-destructive h-4 w-4" />
+                  </IconAction>
+                )}
               </div>
             </div>
           ))}

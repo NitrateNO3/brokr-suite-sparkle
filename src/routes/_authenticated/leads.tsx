@@ -1,3 +1,4 @@
+import { usePermissions } from "@/lib/roles";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -238,6 +239,7 @@ function LeadsPage() {
   const { data: team } = useTeamQuery();
   const update = useUpdateLead();
   const remove = useDeleteLead();
+  const { canDeleteLead } = usePermissions();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [owner, setOwner] = useState("all");
@@ -374,8 +376,10 @@ function LeadsPage() {
               onUpdate={(values, message) =>
                 update.mutate({ id: lead.id, values }, { onSuccess: () => toast.success(message) })
               }
-              onDelete={() =>
-                remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
+              onDelete={
+                canDeleteLead
+                  ? () => remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
+                  : undefined
               }
             />
           ))}

@@ -1,3 +1,4 @@
+import { usePermissions } from "@/lib/roles";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ const EMPTY: Draft = {
 function SettingsPage() {
   const { data, isLoading } = useSettingsQuery();
   const update = useUpdateSettings();
+  const { canManageSettings } = usePermissions();
   const { theme, toggle } = useTheme();
   const [draft, setDraft] = useState<Draft>(EMPTY);
 
@@ -99,7 +101,7 @@ function SettingsPage() {
         description="Branding and contact details shown across your public property pages."
         actions={
           <Button
-            disabled={!data || update.isPending}
+            disabled={!data || update.isPending || !canManageSettings}
             onClick={() =>
               data &&
               update.mutate(
