@@ -411,7 +411,7 @@ function LeadCard({
   members: { id: string; full_name: string | null; email: string | null }[];
   nameOf: (id: string | null) => string;
   onUpdate: (values: Record<string, unknown>, message: string) => void;
-  onDelete: () => void;
+  onDelete?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const isVisit = lead.status === "visit_scheduled";
@@ -591,6 +591,7 @@ function LeadCard({
                 ))}
               </SelectContent>
             </Select>
+            {onDelete && (
             <Button variant="ghost" size="icon" aria-label="Delete lead" onClick={onDelete}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
