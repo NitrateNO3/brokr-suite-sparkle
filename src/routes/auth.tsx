@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import { Building2, Loader2, Lock, Mail, Sparkles } from "lucide-react";
+import { Building2, Loader2, Lock, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-
-const DEMO_EMAIL = "manavyadav34@gmail.com";
-const DEMO_PASSWORD = "Brokrsuit.deeprealesate";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { next?: string } => {
@@ -43,8 +40,8 @@ function AuthPage() {
   const { next } = Route.useSearch();
   /** Where to land after auth — preserves an OAuth consent hand-off when present. */
   const destination = next ?? "/dashboard";
-  const [email, setEmail] = useState(DEMO_EMAIL);
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -77,30 +74,32 @@ function AuthPage() {
     }
   };
 
-  /** Signs in, and provisions the account on first use so the demo login always works. */
+  /** Signs in or registers with validated credentials; errors stay deliberately generic. */
   const authenticate = async (mail: string, pass: string) => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim())) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    if (mode === "signup" && (pass.length < 8 || !/[A-Za-z]/.test(pass) || !/\d/.test(pass))) {
+      toast.error("Password must be at least 8 characters and include a letter and a number");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email: mail,
+          email: mail.trim(),
           password: pass,
           options: { emailRedirectTo: `${window.location.origin}${destination}` },
         });
-        if (error && !error.message.toLowerCase().includes("already")) throw error;
+        if (error) throw error;
       }
-      let { error } = await supabase.auth.signInWithPassword({ email: mail, password: pass });
-      if (error && error.message.toLowerCase().includes("invalid")) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: mail,
-          password: pass,
-          options: { emailRedirectTo: `${window.location.origin}${destination}` },
-        });
-        if (signUpError) throw signUpError;
-        ({ error } = await supabase.auth.signInWithPassword({ email: mail, password: pass }));
-      }
-      if (error) throw error;
-      if (remember) window.localStorage.setItem("brokrsuite.remembered-email", mail);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: mail.trim(),
+        password: pass,
+      });
+      if (error) throw new Error("Invalid email or password");
+      if (remember) window.localStorage.setItem("brokrsuite.remembered-email", mail.trim());
       else window.localStorage.removeItem("brokrsuite.remembered-email");
       toast.success("Welcome back to BrokrSuite");
       navigate({ to: destination, replace: true });
@@ -244,21 +243,6 @@ function AuthPage() {
                   : "Send reset link"}
             </Button>
 
-            {mode !== "forgot" && (
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full"
-                disabled={busy}
-                onClick={() => {
-                  setEmail(DEMO_EMAIL);
-                  setPassword(DEMO_PASSWORD);
-                  void authenticate(DEMO_EMAIL, DEMO_PASSWORD);
-                }}
-              >
-                <Sparkles className="h-4 w-4" /> Use demo account
-              </Button>
-            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
@@ -273,11 +257,6 @@ function AuthPage() {
           </p>
 
 
-          <div className="mt-8 rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground">Demo credentials</p>
-            <p className="mt-1">{DEMO_EMAIL}</p>
-            <p>{DEMO_PASSWORD}</p>
-          </div>
         </motion.div>
       </div>
     </div>
