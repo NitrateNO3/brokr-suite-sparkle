@@ -26,7 +26,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { IconAction, InfoTip } from "@/components/shared/IconAction";
 import { formatNumber, formatPrice, locationLine, pricePerArea, timeAgo } from "@/lib/format";
 import { PROPERTY_TYPES, labelFor } from "@/lib/constants";
-import { useMyRoles } from "@/lib/roles";
+import { usePermissions } from "@/lib/roles";
 import type { Property } from "@/lib/queries";
 
 /** Premium inventory card used by the grid view of the properties module. */
@@ -92,8 +92,7 @@ export function PropertyCard({
   onTogglePublished: () => void;
   onToggleFeatured: () => void;
 }) {
-  const { roles } = useMyRoles();
-  const canUpload = roles.includes("admin") || roles.includes("manager");
+  const { canUploadMedia: canUpload, canDeleteProperty } = usePermissions();
   const area = property.super_area ?? property.builtup_area ?? property.carpet_area;
   const rate = pricePerArea(Number(property.price), area ? Number(area) : null, property.area_unit);
 
@@ -240,13 +239,15 @@ export function PropertyCard({
               <Pencil className="h-4 w-4" />
             </Link>
           </IconAction>
-          <IconAction
-            label="Delete Property"
-            onClick={onDelete}
-            className="hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </IconAction>
+          {canDeleteProperty && (
+            <IconAction
+              label="Delete Property"
+              onClick={onDelete}
+              className="hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </IconAction>
+          )}
         </div>
       </div>
     </article>

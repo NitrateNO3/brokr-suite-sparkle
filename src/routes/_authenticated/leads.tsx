@@ -1,3 +1,4 @@
+import { usePermissions } from "@/lib/roles";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -238,6 +239,7 @@ function LeadsPage() {
   const { data: team } = useTeamQuery();
   const update = useUpdateLead();
   const remove = useDeleteLead();
+  const { canDeleteLead } = usePermissions();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [owner, setOwner] = useState("all");
@@ -374,8 +376,10 @@ function LeadsPage() {
               onUpdate={(values, message) =>
                 update.mutate({ id: lead.id, values }, { onSuccess: () => toast.success(message) })
               }
-              onDelete={() =>
-                remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
+              onDelete={
+                canDeleteLead
+                  ? () => remove.mutate(lead.id, { onSuccess: () => toast.success("Lead removed") })
+                  : undefined
               }
             />
           ))}
@@ -407,7 +411,7 @@ function LeadCard({
   members: { id: string; full_name: string | null; email: string | null }[];
   nameOf: (id: string | null) => string;
   onUpdate: (values: Record<string, unknown>, message: string) => void;
-  onDelete: () => void;
+  onDelete?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const isVisit = lead.status === "visit_scheduled";
@@ -587,6 +591,7 @@ function LeadCard({
                 ))}
               </SelectContent>
             </Select>
+            {onDelete && (
             <Button variant="ghost" size="icon" aria-label="Delete lead" onClick={onDelete}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
