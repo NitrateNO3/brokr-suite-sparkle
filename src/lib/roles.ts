@@ -35,6 +35,30 @@ export function useMyRoles() {
   return { ...query, roles, isAdmin: roles.includes("admin") };
 }
 
+/**
+ * Single source of truth for UI permissions. These mirror the database policies —
+ * the backend enforces the same rules, so bypassing the UI changes nothing.
+ */
+export function usePermissions() {
+  const { roles, isLoading } = useMyRoles();
+  const isAdmin = roles.includes("admin");
+  const isManager = roles.includes("manager");
+  const privileged = isAdmin || isManager;
+  return {
+    isLoading,
+    roles,
+    isAdmin,
+    isManager,
+    canManageTeam: isAdmin,
+    canManageSettings: isAdmin,
+    canDeleteProperty: privileged,
+    canDeleteLead: privileged,
+    canDeleteCustomer: privileged,
+    canUploadMedia: privileged,
+  };
+}
+
+
 /** Every teammate with their assigned roles. */
 export function useTeamQuery() {
   return useQuery({
