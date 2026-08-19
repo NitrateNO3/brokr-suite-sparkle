@@ -185,8 +185,8 @@ export function amenitySetFor(category: PropertyCategory): readonly string[] {
 
 /* ------------------------------ dynamic sections ---------------------------- */
 
-const AREA_BUILTUP: FieldSpec = { key: "builtup_area", label: "Built-up Area", kind: "area" };
-const AREA_CARPET: FieldSpec = { key: "carpet_area", label: "Carpet Area", kind: "area" };
+const AREA_BUILTUP: FieldSpec = { key: "builtup_area", label: "Built-up Area", kind: "area", required: true };
+const AREA_CARPET: FieldSpec = { key: "carpet_area", label: "Carpet Area", kind: "area", required: false };
 const AREA_PLOT: FieldSpec = { key: "super_area", label: "Plot Area", kind: "area", required: true };
 
 /** Compact "features" block (chips) shown only when it makes sense. */
@@ -402,9 +402,9 @@ function pricingFieldsBase(purpose: ListingPurpose): FieldSpec[] {
 }
 
 
-/** Fields the user must answer: everything except free-form prose. */
+/** Fields the user must answer: everything except free-form prose or explicitly optional fields. */
 function mandatory(fields: FieldSpec[]): FieldSpec[] {
-  return fields.map((f) => (f.kind === "textarea" || f.kind === "toggle" ? f : { ...f, required: true }));
+  return fields.map((f) => (f.kind === "textarea" || f.kind === "toggle" || f.required === false ? f : { ...f, required: true }));
 }
 
 /** Features are always presented as dropdowns for faster, error-free input. */
