@@ -592,9 +592,10 @@ function LeadCard({
               </SelectContent>
             </Select>
             {onDelete && (
-            <Button variant="ghost" size="icon" aria-label="Delete lead" onClick={onDelete}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+              <Button variant="ghost" size="icon" aria-label="Delete lead" onClick={onDelete}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
           </div>
         </div>
       ) : null}
