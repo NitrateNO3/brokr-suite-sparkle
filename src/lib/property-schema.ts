@@ -26,6 +26,8 @@ export type FieldSpec = {
   /** Full width on desktop (default is half). */
   wide?: boolean;
   suffix?: string;
+  /** Area fields with a fixed unit render a static unit label instead of a dropdown. */
+  fixedUnit?: string;
 };
 
 export type ListingPurpose = "sale" | "rent" | "pg";
@@ -186,8 +188,8 @@ export function amenitySetFor(category: PropertyCategory): readonly string[] {
 /* ------------------------------ dynamic sections ---------------------------- */
 
 const AREA_BUILTUP: FieldSpec = { key: "builtup_area", label: "Built-up Area", kind: "area", required: true };
-const AREA_CARPET: FieldSpec = { key: "carpet_area", label: "Carpet Area", kind: "area", required: false };
-const AREA_PLOT: FieldSpec = { key: "super_area", label: "Plot Area", kind: "area", required: true };
+const AREA_CARPET: FieldSpec = { key: "carpet_area", label: "Carpet Area", kind: "area", required: false, fixedUnit: "sqft" };
+const AREA_PLOT: FieldSpec = { key: "super_area", label: "Plot Area", kind: "area", required: true, fixedUnit: "sqyard" };
 
 /** Compact "features" block (chips) shown only when it makes sense. */
 function featureFieldsBase(category: PropertyCategory): FieldSpec[] {

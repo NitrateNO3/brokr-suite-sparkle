@@ -159,12 +159,14 @@ export function AreaInput({
   onValue,
   onUnit,
   placeholder,
+  fixedUnit,
 }: {
   value: string;
   unit: string;
   onValue: (v: string) => void;
   onUnit: (v: string) => void;
   placeholder?: string;
+  fixedUnit?: string | undefined;
 }) {
   return (
     <div className="flex gap-2">
@@ -175,6 +177,11 @@ export function AreaInput({
         onChange={(e) => onValue(e.target.value.replace(/[^\d.]/g, ""))}
         className="h-10"
       />
+      {fixedUnit ? (
+        <span className="grid h-10 w-24 shrink-0 place-items-center rounded-md border border-input bg-muted/50 text-xs font-medium text-muted-foreground">
+          {AREA_UNIT_OPTIONS.find((u) => u.value === fixedUnit)?.label ?? fixedUnit}
+        </span>
+      ) : (
       <Select value={unit} onValueChange={onUnit}>
         <SelectTrigger className="h-10 w-28 shrink-0">
           <SelectValue />
@@ -187,6 +194,7 @@ export function AreaInput({
           ))}
         </SelectContent>
       </Select>
+      )}
     </div>
   );
 }
@@ -301,7 +309,13 @@ export function DynamicField({
         );
       case "area":
         return (
-          <AreaInput value={value} unit={areaUnit} onValue={onChange} onUnit={onAreaUnit} />
+          <AreaInput
+            value={value}
+            unit={field.fixedUnit ?? areaUnit}
+            onValue={onChange}
+            onUnit={onAreaUnit}
+            fixedUnit={field.fixedUnit}
+          />
         );
       case "money":
         return <MoneyInput value={value} onChange={onChange} />;
