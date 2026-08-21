@@ -29,7 +29,7 @@ import { PROPERTY_TYPES, labelFor } from "@/lib/constants";
 import { usePermissions } from "@/lib/roles";
 import type { Property } from "@/lib/queries";
 
-/** Premium inventory card used by the grid view of the properties module. */
+/** Compact, information-dense inventory card used by the properties grid. */
 function CoverImage({
   src,
   alt,
@@ -44,13 +44,13 @@ function CoverImage({
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className="flex h-44 w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted to-accent/40 text-muted-foreground">
-        <Building2 className="h-8 w-8 opacity-40" aria-hidden="true" />
-        <p className="text-xs font-medium">No Image Available</p>
+      <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-muted to-accent/40 text-muted-foreground">
+        <Building2 className="h-6 w-6 opacity-40" aria-hidden="true" />
+        <p className="text-[11px] font-medium">No image</p>
         {canUpload && (
-          <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs">
+          <Button asChild size="sm" variant="outline" className="h-6 gap-1 px-2 text-[11px]">
             <Link to="/properties/$id/edit" params={{ id: propertyId }}>
-              <ImagePlus className="h-3.5 w-3.5" /> Upload image
+              <ImagePlus className="h-3 w-3" /> Upload
             </Link>
           </Button>
         )}
@@ -64,10 +64,11 @@ function CoverImage({
       loading="lazy"
       decoding="async"
       onError={() => setFailed(true)}
-      className="h-44 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+      className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
     />
   );
 }
+
 
 export function PropertyCard({
   property,
