@@ -85,7 +85,7 @@ export function PropertyGallery({
     };
   }, [open, step]);
 
-  if (!total) return <Placeholder className="h-72 w-full md:h-[26rem]" />;
+  if (!total) return <Placeholder className="h-60 w-full md:h-[22rem]" />;
 
   const current = usable[Math.min(active, total - 1)]!;
 
@@ -99,7 +99,7 @@ export function PropertyGallery({
           fetchPriority="high"
           decoding="async"
           onError={() => setBroken((prev) => [...prev, current.url])}
-          className="h-72 w-full cursor-zoom-in object-cover transition-transform duration-500 md:h-[28rem]"
+          className="h-60 w-full cursor-zoom-in object-cover transition-transform duration-500 md:h-[23rem]"
           onClick={() => setOpen(true)}
         />
 
