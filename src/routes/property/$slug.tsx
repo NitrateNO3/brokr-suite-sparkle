@@ -316,7 +316,7 @@ function PublicPropertyPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-4">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -325,7 +325,7 @@ function PublicPropertyPage() {
           <PropertyGallery images={photos} cover={property.cover_image} title={property.title} />
         </motion.div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-3">
+        <div className="mt-5 grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="flex flex-wrap items-center gap-2">
               {property.is_verified && <Badge icon={BadgeCheck} label="Verified" tone="brand" />}
@@ -335,11 +335,11 @@ function PublicPropertyPage() {
               {property.is_exclusive && <Badge icon={Sparkles} label="Exclusive" />}
             </div>
 
-            <p className="eyebrow mt-3 text-xs uppercase tracking-widest text-muted-foreground">
+            <p className="eyebrow mt-2 text-[11px] uppercase tracking-widest text-muted-foreground">
               {property.property_code} · For {property.purpose} ·{" "}
               {labelFor(PROPERTY_TYPES, property.property_type)}
             </p>
-            <h1 className="display-title mt-2 text-3xl">{property.title}</h1>
+            <h1 className="display-title mt-1.5 text-2xl">{property.title}</h1>
             {locality && (
               <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
@@ -347,8 +347,8 @@ function PublicPropertyPage() {
               </p>
             )}
 
-            <div className="mt-4 flex flex-wrap items-end gap-x-4 gap-y-1">
-              <p className="display-title text-3xl text-primary">
+            <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-1">
+              <p className="display-title text-2xl text-primary">
                 {property.price ? formatRupees(Number(property.price)) : "Price on request"}
               </p>
               {rate && <p className="text-sm text-muted-foreground">{rate}</p>}
@@ -363,13 +363,13 @@ function PublicPropertyPage() {
             </p>
 
             {specs.length > 0 && (
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {specs.map((spec) => (
-                  <div key={spec.label} className="surface p-3">
+                  <div key={spec.label} className="surface rounded-xl p-2.5">
                     <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
                       <spec.icon className="h-3.5 w-3.5" /> {spec.label}
                     </p>
-                    <p className="mt-1 text-sm font-medium">{spec.value}</p>
+                    <p className="mt-0.5 text-[13px] font-semibold">{spec.value}</p>
                   </div>
                 ))}
               </div>
