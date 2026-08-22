@@ -10,7 +10,7 @@ import { formatArea, formatPrice, locationLine } from "@/lib/format";
 import { PROPERTY_TYPES, labelFor } from "@/lib/constants";
 import { mailtoUrl, openWithSystemApp, telUrl, whatsappUrl } from "@/lib/native";
 
-type Search = { id?: string };
+type Search = { id?: string | undefined };
 
 export const Route = createFileRoute("/shared/properties")({
   validateSearch: (search: Record<string, unknown>): Search => ({
