@@ -29,6 +29,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as PropertySlugRouteImport } from './routes/property/$slug'
+import { Route as SharedPropertiesRouteImport } from './routes/shared/properties'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties/index'
@@ -137,6 +138,11 @@ const PropertySlugRoute = PropertySlugRouteImport.update({
   path: '/property/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SharedPropertiesRoute = SharedPropertiesRouteImport.update({
+  id: '/shared/properties',
+  path: '/shared/properties',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
+  '/shared/properties': typeof SharedPropertiesRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
+  '/shared/properties': typeof SharedPropertiesRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/property/$slug': typeof PropertySlugRoute
+  '/shared/properties': typeof SharedPropertiesRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/property/$slug'
+    | '/shared/properties'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/properties/new'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/property/$slug'
+    | '/shared/properties'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/properties/new'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks'
     | '/_authenticated/team'
     | '/property/$slug'
+    | '/shared/properties'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/properties/new'
@@ -351,6 +363,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   PropertySlugRoute: typeof PropertySlugRoute
+  SharedPropertiesRoute: typeof SharedPropertiesRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropertySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shared/properties': {
+      id: '/shared/properties'
+      path: '/shared/properties'
+      fullPath: '/shared/properties'
+      preLoaderRoute: typeof SharedPropertiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
       path: '/.lovable/oauth/consent'
@@ -593,6 +613,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   PropertySlugRoute: PropertySlugRoute,
+  SharedPropertiesRoute: SharedPropertiesRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
