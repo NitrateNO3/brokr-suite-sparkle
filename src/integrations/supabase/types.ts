@@ -1222,6 +1222,7 @@ export type Database = {
           slug: string
         }[]
       }
+      list_shared_properties: { Args: { p_ids: string[] }; Returns: Json }
       record_share_event: {
         Args: {
           p_event: Database["public"]["Enums"]["share_event_type"]
